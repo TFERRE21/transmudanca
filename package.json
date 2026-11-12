@@ -1,8 +1,8 @@
 {
-  "name": "atlas-transporte",
+  "name": "mudancas-brasil",
   "version": "1.0.0",
   "private": true,
-  "description": "Site institucional Atlas Transporte — mudanças nacionais e interestaduais",
+  "description": "Site institucional Mudanças Brasil — mudanças nacionais e interestaduais",
   "type": "module",
   "scripts": {
     "start": "node server.js"
