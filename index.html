@@ -196,6 +196,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 .hero-visual.photo-unavailable{background:linear-gradient(135deg,#075b32,#13884b)}
 @media(max-width:760px){.hero-brand-overlay{width:124px;top:12px;left:12px}}
 
+
+/* HERO: fotografia limpa, sem módulo, selo ou legenda sobreposta */
+.hero-visual{position:relative;width:100%;height:390px;min-height:0;overflow:hidden;border:0;border-radius:14px;background:transparent;box-shadow:none}
+.hero-visual img{position:relative;display:block;width:100%;height:100%;min-height:0;object-fit:cover;object-position:center;border:0;border-radius:14px}
+.hero-visual:after,.hero-brand-overlay,.hero-visual-label{display:none!important}
+.hero-visual img.image-load-error{visibility:hidden}
+@media(max-width:760px){.hero-visual{height:275px;border-radius:12px}.hero-visual img{border-radius:12px}}
+
 </style>
 </head>
 <body>
@@ -208,7 +216,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 <main>
 <section class="hero" id="inicio"><div class="container hero-grid">
 <div class="hero-copy"><div class="eyebrow">Mudanças residenciais, comerciais e interestaduais</div><h1>Levamos sua mudança com <span>cuidado e confiança.</span></h1><p>Transporte nacional e interestadual com planejamento, atenção aos seus pertences e atendimento próximo em cada etapa.</p><div class="hero-actions"><a class="btn btn-yellow" href="#contato">◉ SOLICITAR ORÇAMENTO AGORA <span>›</span></a><a class="btn btn-glass" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Mudanças%20Brasil." target="_blank" rel="noopener">FALAR NO WHATSAPP</a></div><div class="hero-proof"><span><b>✓</b> Atendimento nacional</span><span><b>✓</b> Planejamento de rota</span><span><b>✓</b> Mais de 20 anos de experiência</span></div></div>
-<div class="hero-visual"><img id="heroMovingImage" src="https://images.unsplash.com/photo-1698917414969-feade59e3343?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=1600" data-fallback="https://images.unsplash.com/photo-1715645948484-da40dd56bc93?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1600" alt="Profissional descarregando móveis de um caminhão de mudanças" fetchpriority="high" loading="eager" referrerpolicy="no-referrer"><div class="hero-brand-overlay"><img src="/assets/mudancas-brasil-logo.jpg" alt="Mudanças Brasil"></div><div class="hero-visual-label"><span>MUDANÇAS BRASIL</span>Sua mudança começa com cuidado em cada detalhe.</div></div>
+<div class="hero-visual"><img id="heroMovingImage" src="/assets/mudancas-brasil-hero.webp" alt="Equipe uniformizada da Mudanças Brasil transportando um sofá protegido para o caminhão-baú da empresa" fetchpriority="high" loading="eager" decoding="async"></div>
 </div></section>
 <div class="container benefits">
 <div class="benefit"><div class="benefit-icon">✓</div><div><strong>Transporte Seguro</strong><small>Seus bens com proteção</small></div></div>
@@ -266,13 +274,8 @@ document.getElementById('year').textContent=new Date().getFullYear();
 const heroMovingImage=document.getElementById('heroMovingImage');
 if(heroMovingImage){
  heroMovingImage.addEventListener('error',()=>{
-  if(heroMovingImage.dataset.fallback && !heroMovingImage.dataset.fallbackUsed){
-   heroMovingImage.dataset.fallbackUsed='1';
-   heroMovingImage.src=heroMovingImage.dataset.fallback;
-  }else{
-   heroMovingImage.closest('.hero-visual').classList.add('photo-unavailable');
-   heroMovingImage.remove();
-  }
+  heroMovingImage.alt='Imagem da equipe Mudanças Brasil em atualização';
+  heroMovingImage.classList.add('image-load-error');
  });
 }
 
