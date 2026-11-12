@@ -1,20 +1,23 @@
-# Vértice Mudanças
+# Atlas Nacional Mudanças
 
-Site institucional responsivo da Vértice Mudanças — transportes nacionais e interestaduais.
+Site institucional responsivo da Atlas Nacional Mudanças — atendimento de mudanças residenciais e comerciais, nacional e interestadual.
 
-## Publicação
+## Execução no VPS
+- Runtime: Node.js 20 ou superior
+- Instalação: `npm install` (não há dependências externas)
+- Inicialização: `npm start`
+- Porta: usa `PORT` do ambiente ou 3000 como padrão
 
-Projeto estático HTML/CSS/JavaScript. Publique a raiz do repositório em um servidor web com HTTPS. Arquivos principais: `index.html`, `privacidade.html`, `robots.txt` e `sitemap.xml`.
+## Identidade e atendimento
+- Marca de apresentação: Atlas Nacional Mudanças
+- WhatsApp: +55 61 99803-6248
+- CNPJ informado pelo responsável: 69.623.245/0001-71
+- Desenvolvido por Oolivo
 
-## Antes de produção
-
-- Confirmar domínio oficial e atualizar canonical, Open Graph, sitemap e robots.
-- Configurar HTTPS e hospedagem.
-- Substituir imagens externas por arquivos otimizados e licenciados para uso comercial.
-- Inserir dados oficiais da empresa somente após validação.
-- Adicionar avaliações apenas com autorização e comprovação de autenticidade.
-- Configurar Analytics/Search Console apenas após obter os identificadores e consentimento aplicável.
-
-WhatsApp comercial: +55 61 99803-6248.
-
-Desenvolvido por Oolivo.
+## Antes da divulgação definitiva
+- Confirmar disponibilidade da marca no INPI e do domínio desejado.
+- Confirmar que a razão social/nome fantasia cadastrado pode usar a marca divulgada.
+- Validar o texto de experiência superior a 20 anos e os serviços efetivamente prestados.
+- Substituir imagens ilustrativas por fotos reais da equipe, frota e materiais, quando disponíveis.
+- Configurar domínio, canonical, sitemap e Search Console após confirmar o domínio oficial.
+- Revisar política de privacidade conforme os processos reais da empresa.
