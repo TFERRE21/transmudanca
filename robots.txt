@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://transmudanca.com.br/sitemap.xml
