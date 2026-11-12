@@ -1,8 +1,8 @@
 {
-  "name": "vertice-mudancas",
+  "name": "atlas-nacional-mudancas",
   "version": "1.0.0",
   "private": true,
-  "description": "Site institucional Vértice Mudanças",
+  "description": "Site institucional Atlas Nacional Mudanças",
   "type": "module",
   "scripts": {
     "start": "node server.js"
