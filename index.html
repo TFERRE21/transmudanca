@@ -55,6 +55,101 @@ html,body{max-width:100%;overflow-x:clip}
 @media(max-width:760px){.nav-quote{display:inline-flex!important;order:2;padding:9px 10px;font-size:9px;letter-spacing:.035em}.menu-btn{order:3}.brand{gap:8px}.brand-symbol{width:41px;height:41px}.brand-symbol svg{width:32px;height:32px}.brand-word{font-size:12px}.brand-word small{font-size:8px}.nav{gap:8px}.brazil-map-card{padding:17px 15px}.brazil-map{height:280px}.photo-gallery{gap:10px}.photo-gallery figure,.photo-gallery img{min-height:160px}.photo-gallery figcaption{font-size:10px;padding:28px 10px 10px}}
 @media(max-width:390px){.nav-quote{font-size:8px;padding:8px 8px}.brand-word{font-size:11px}.brand-symbol{width:37px;height:37px}}
 
+
+/* REVISÃO VISUAL COMPLETA — Atlas Transporte */
+:root{--navy:#0b1d35;--navy2:#142e4b;--gold:#caa45f;--gold2:#ead3a0;--paper:#f6f7f9;--ink:#17263a;--muted:#657387}
+body{background:#fff;color:var(--ink);overflow-x:hidden}
+.container{width:min(1180px,calc(100% - 48px))}
+.header{box-shadow:0 5px 24px #0b1d350b}
+.nav{height:78px}
+.brand-symbol{width:48px;height:48px;border-radius:13px;background:linear-gradient(145deg,#1b4268,#081a30);border:1px solid #d1ad69;box-shadow:0 7px 18px #081a3025}
+.brand-symbol svg{width:38px;height:38px}
+.brand-word{font-size:16px;font-weight:900;letter-spacing:.025em}
+.nav-links{gap:20px;font-size:12px}
+.nav-quote{background:#cba45f;color:#0b1d35;border-radius:8px;padding:14px 18px;box-shadow:0 7px 18px #cba45f35}
+.hero{background:linear-gradient(112deg,#07172b 0%,#102c4b 62%,#183b60 100%)}
+.hero-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:38px;min-height:610px;padding:62px 0}
+.hero h1{font-size:clamp(40px,4.7vw,60px);line-height:1.08;max-width:650px}
+.hero-copy>p{max-width:520px;font-size:15px;line-height:1.8}
+.truck-stage.photo-stage{min-height:420px;border:1px solid #ffffff30;border-radius:18px;overflow:hidden;background:#d9e0e7;box-shadow:0 24px 60px #0004}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.photo-overlay{padding:72px 25px 24px}
+.photo-overlay span{font-size:10px;letter-spacing:.2em;color:#f1dba9}
+.photo-overlay strong{font-size:24px}
+.trustbar{border-bottom:1px solid #e9edf1}
+.section{padding:82px 0}
+.section-head{margin-bottom:36px}
+.section-head h2{font-size:clamp(28px,3.4vw,40px)}
+.services{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.service{border:1px solid #e7ebf0;border-radius:14px;box-shadow:0 8px 26px #0b1d3508}
+.service img{height:215px;object-fit:cover}
+.service-body{padding:20px 21px 22px}
+.about-grid{gap:58px}
+.about-photo img{height:490px;object-fit:cover;border-radius:18px}
+.packing-grid{gap:16px}
+.packing-main{min-height:400px}
+.packing-tile{min-height:192px}
+.map-section{background:linear-gradient(125deg,#0a1d34,#15395d);padding:88px 0}
+.map-grid{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:50px}
+.brazil-map-card{width:min(100%,490px);padding:23px 26px 16px;background:#fff;border-radius:18px;box-shadow:0 22px 48px #0003}
+.brazil-map{width:100%;height:340px;object-fit:contain;display:block;filter:sepia(1) saturate(1.35) hue-rotate(350deg) brightness(1.08) contrast(1.12)}
+.map-regions span{background:#f1eadc;color:#233b56;border:1px solid #e1d2b3}
+.map-credit{text-align:center;font-size:9px;color:#8a96a5;margin:8px 0 0}
+.photo-gallery{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.photo-gallery figure{height:230px;min-height:230px;border-radius:13px}
+.photo-gallery img{height:100%;min-height:230px;object-fit:cover}
+.photo-gallery figcaption{font-size:11px;padding:32px 13px 12px}
+.quote-section{background:linear-gradient(120deg,#f1e7d4 0%,#d8bd88 100%);padding:68px 0}
+.quote-grid{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:48px}
+.quote-copy h2{font-size:clamp(31px,3.7vw,44px);line-height:1.12}
+.quote-card{border-radius:16px;padding:27px;box-shadow:0 18px 45px #0b1d3518}
+.quote-card h3{font-size:19px}
+.field input,.field select{min-height:46px}
+.quote-form button{min-height:48px}
+.footer{padding:54px 0 20px}
+.wa-float{box-shadow:0 8px 22px #078b4b55}
+@media(max-width:1000px){.nav-links{gap:11px}.nav-links a{font-size:10px}.nav-quote{padding:12px;font-size:9px}.hero-grid{gap:24px}.hero h1{font-size:clamp(38px,4.5vw,52px)}.truck-stage.photo-stage{min-height:350px}.photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+.container{width:calc(100% - 34px)}
+.nav{height:70px;gap:8px}
+.brand{gap:7px}.brand-symbol{width:40px;height:40px}.brand-symbol svg{width:32px;height:32px}.brand-word{font-size:12px}.brand-word small{font-size:7px}
+.nav-quote{display:inline-flex!important;order:2;font-size:8px;letter-spacing:.025em;padding:9px 9px;white-space:nowrap}
+.menu-btn{order:3;font-size:22px}
+.hero-grid{grid-template-columns:1fr;min-height:auto;padding:54px 0 55px;gap:25px}
+.hero h1{font-size:clamp(39px,10vw,52px);max-width:560px}
+.hero-copy>p{font-size:14px}
+.truck-stage.photo-stage{min-height:270px;width:100%}
+.photo-overlay strong{font-size:20px}
+.hero-proof{gap:12px}
+.hero-proof span{font-size:10px}
+.section{padding:65px 0}
+.services{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.service img{height:155px}
+.service-body{padding:14px}
+.service-body h3{font-size:14px}
+.service-body p{font-size:11px}
+.about-grid,.map-grid,.quote-grid{grid-template-columns:1fr;gap:27px}
+.about-photo img{height:330px}
+.map-section{padding:65px 0}
+.brazil-map-card{width:100%;padding:18px}
+.brazil-map{height:270px}
+.photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.photo-gallery figure,.photo-gallery img{height:165px;min-height:165px}
+.quote-section{padding:54px 0}
+.quote-card{padding:20px}
+.footer-grid{grid-template-columns:1fr 1fr;gap:25px}
+}
+@media(max-width:420px){
+.brand-word{font-size:11px}
+.brand-word small{font-size:7px}
+.nav-quote{font-size:7px;padding:8px 7px}
+.services{grid-template-columns:1fr}
+.service img{height:190px}
+.photo-gallery figure,.photo-gallery img{height:145px;min-height:145px}
+.quote-form{grid-template-columns:1fr}
+.field.full,.quote-form button{grid-column:auto}
+}
+
 </style>
 </head>
 <body>
@@ -66,31 +161,27 @@ html,body{max-width:100%;overflow-x:clip}
 </div></header>
 <main>
 <section class="hero" id="inicio"><div class="container hero-grid"><div class="hero-copy"><div class="eyebrow">Mudanças residenciais e comerciais em todo o Brasil</div><h1>Levamos sua mudança com <span>cuidado e confiança.</span></h1><p>Transporte nacional e interestadual com planejamento, atenção aos seus pertences e atendimento próximo em cada etapa.</p><div class="hero-actions"><a class="btn btn-gold" href="#contato">SOLICITAR ORÇAMENTO ↗</a><a class="btn btn-outline" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Atlas%20Transporte." target="_blank" rel="noopener">FALAR NO WHATSAPP</a></div><div class="hero-proof"><span><b>✓</b> Atendimento nacional</span><span><b>✓</b> Planejamento de rota</span><span><b>✓</b> Mais de 20 anos de experiência no setor</span></div></div>
-<div class="truck-stage photo-stage"><img class="hero-photo" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Equipe de mudança uniformizada carregando um sofá em caminhão-baú" fetchpriority="high"><div class="photo-overlay"><span>ATLAS TRANSPORTE</span><strong>Sua mudança, bem cuidada.</strong></div></div></div></section>
+<div class="truck-stage photo-stage"><img class="hero-photo" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Equipe de mudança uniformizada carregando um sofá em caminhão-baú" fetchpriority="high"><div class="photo-overlay"><span>ATLAS TRANSPORTE</span><strong>Sua mudança, bem cuidada.</strong></div></div></div></section>
 <div class="trustbar"><div class="container trust-grid"><div class="trust"><i>⌖</i> Cobertura nacional</div><div class="trust"><i>◇</i> Cuidado com seus bens</div><div class="trust"><i>▣</i> Embalagem organizada</div><div class="trust"><i>✓</i> Atendimento transparente</div></div></div>
 <section class="section" id="servicos"><div class="container"><div class="section-head"><div class="eyebrow">Soluções completas</div><h2>Uma estrutura para cada tipo de mudança</h2><p>Atendimento planejado para residências, empresas e transportes entre cidades e estados de todo o país.</p></div><div class="services">
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=85" alt="Ambiente residencial para mudança"><div class="service-body"><h3>Mudanças residenciais</h3><p>Transporte de móveis, eletrodomésticos, caixas e objetos pessoais para seu novo endereço.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=85" alt="Escritório preparado para mudança comercial"><div class="service-body"><h3>Mudanças comerciais</h3><p>Organização e transporte de mobiliário, equipamentos e materiais de escritórios e empresas.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=900&q=85" alt="Caminhão para transporte rodoviário"><div class="service-body"><h3>Transporte interestadual</h3><p>Mudanças entre estados com avaliação de rota, volume, acessos e data de coleta.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1715645948484-da40dd56bc93?auto=format&fit=crop&w=900&q=85" alt="Profissional carregando caixas para caminhão"><div class="service-body"><h3>Transporte nacional</h3><p>Consultamos sua rota para atender mudanças entre diferentes regiões do Brasil.</p><a class="service-link" href="#contato">Consultar rota →</a></div></article>
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85" alt="Móveis organizados em ambiente residencial"><div class="service-body"><h3>Transporte de móveis</h3><p>Transporte de móveis e peças individuais conforme dimensões e condições do trajeto.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
-<article class="service"><img loading="lazy" src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=85" alt="Interior residencial com objetos e mobiliário"><div class="service-body"><h3>Embalagem e proteção</h3><p>Consulte opções de materiais e serviços de proteção para louças, utensílios e móveis.</p><a class="service-link" href="#embalagem">Conhecer cuidados →</a></div></article>
+<article class="service"><img loading="lazy" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Ambiente residencial para mudança"><div class="service-body"><h3>Mudanças residenciais</h3><p>Transporte de móveis, eletrodomésticos, caixas e objetos pessoais para seu novo endereço.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
+<article class="service"><img loading="lazy" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Escritório preparado para mudança comercial"><div class="service-body"><h3>Mudanças comerciais</h3><p>Organização e transporte de mobiliário, equipamentos e materiais de escritórios e empresas.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
+<article class="service"><img loading="lazy" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Caminhão para transporte rodoviário"><div class="service-body"><h3>Transporte interestadual</h3><p>Mudanças entre estados com avaliação de rota, volume, acessos e data de coleta.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
+<article class="service"><img loading="lazy" src="https://www.trendhizmet.com/content/upload/images/large/2026/03/sehir-ici-nakliyat-sirketleri.webp" alt="Profissional carregando caixas para caminhão"><div class="service-body"><h3>Transporte nacional</h3><p>Consultamos sua rota para atender mudanças entre diferentes regiões do Brasil.</p><a class="service-link" href="#contato">Consultar rota →</a></div></article>
+<article class="service"><img loading="lazy" src="https://www.trendhizmet.com/content/upload/images/large/2026/03/sehir-ici-nakliyat-sirketleri.webp" alt="Móveis organizados em ambiente residencial"><div class="service-body"><h3>Transporte de móveis</h3><p>Transporte de móveis e peças individuais conforme dimensões e condições do trajeto.</p><a class="service-link" href="#contato">Solicitar cotação →</a></div></article>
+<article class="service"><img loading="lazy" src="https://movemate.ca/images/services/packing-and-unpacking-hero.webp" alt="Interior residencial com objetos e mobiliário"><div class="service-body"><h3>Embalagem e proteção</h3><p>Consulte opções de materiais e serviços de proteção para louças, utensílios e móveis.</p><a class="service-link" href="#embalagem">Conhecer cuidados →</a></div></article>
 </div></div></section>
-<section class="section soft" id="empresa"><div class="container about-grid"><div class="about-photo"><img loading="lazy" src="https://le-cdn.hibuwebsites.com/7acee92415804d0b8383346668adbf06/dms3rep/multi/opt/gallery-content-02-uncle-marks-moving-1920w.jpeg" alt="Profissional protegendo um sofá com manta durante uma mudança residencial"><div class="photo-stamp"><strong>20+ anos</strong><span>de experiência no segmento de mudanças</span></div></div><div class="about-copy"><div class="eyebrow">Nossa história</div><h2>Experiência que move. Compromisso que acompanha você.</h2><p>A Atlas Transporte nasceu com um propósito claro: tornar cada mudança uma experiência mais organizada, transparente e tranquila. Nossa trajetória é guiada por mais de duas décadas de experiência no segmento de transporte e mudanças.</p><p>Ao longo dessa caminhada, aprendemos que transportar não é apenas levar objetos de um endereço a outro. É cuidar de conquistas, memórias, projetos e novos começos. Por isso, cada atendimento começa ouvindo o cliente e entendendo o que realmente precisa ser transportado.</p><p>Nosso compromisso é planejar cada etapa com responsabilidade, comunicação clara e atenção aos detalhes — da preparação dos itens à chegada ao destino.</p><div class="about-points"><span>Planejamento de cada rota</span><span>Atendimento próximo</span><span>Cuidado na embalagem</span><span>Compromisso com o cliente</span></div><a class="btn btn-navy" href="#contato">Converse com nossa equipe ↗</a></div></div></section>
+<section class="section soft" id="empresa"><div class="container about-grid"><div class="about-photo"><img loading="lazy" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Profissional protegendo um sofá com manta durante uma mudança residencial"><div class="photo-stamp"><strong>20+ anos</strong><span>de experiência no segmento de mudanças</span></div></div><div class="about-copy"><div class="eyebrow">Nossa história</div><h2>Experiência que move. Compromisso que acompanha você.</h2><p>A Atlas Transporte nasceu com um propósito claro: tornar cada mudança uma experiência mais organizada, transparente e tranquila. Nossa trajetória é guiada por mais de duas décadas de experiência no segmento de transporte e mudanças.</p><p>Ao longo dessa caminhada, aprendemos que transportar não é apenas levar objetos de um endereço a outro. É cuidar de conquistas, memórias, projetos e novos começos. Por isso, cada atendimento começa ouvindo o cliente e entendendo o que realmente precisa ser transportado.</p><p>Nosso compromisso é planejar cada etapa com responsabilidade, comunicação clara e atenção aos detalhes — da preparação dos itens à chegada ao destino.</p><div class="about-points"><span>Planejamento de cada rota</span><span>Atendimento próximo</span><span>Cuidado na embalagem</span><span>Compromisso com o cliente</span></div><a class="btn btn-navy" href="#contato">Converse com nossa equipe ↗</a></div></div></section>
 <section class="history-band"><div class="container history-grid"><div class="history-number">20+<small>Anos de experiência</small></div><div class="history-copy"><h2>Uma história construída com experiência, cuidado e responsabilidade.</h2><p>Mais de 20 anos de experiência no segmento orientam nosso jeito de planejar, embalar e transportar. Cada operação é avaliada de acordo com a rota e as necessidades do cliente.</p></div></div></section>
-<section class="section" id="embalagem"><div class="container"><div class="section-head"><div class="eyebrow">Cuidado em cada detalhe</div><h2>Seus pertences merecem atenção do começo ao fim</h2><p>Caixas identificadas, utensílios organizados e proteção adequada fazem parte de uma mudança bem planejada. Os serviços de embalagem são definidos conforme a cotação.</p></div><div class="packing-grid"><div class="packing-main"><img loading="lazy" src="https://www.assureshift.in/sites/default/files/images/content/packers-and-movers-ahmedabad-to-delhi-house-shifting.jpg" alt="Profissional organizando caixas e protegendo utensílios para transporte"><div class="image-caption"><small>Preparação e organização</small><h3>Embalagem cuidadosa para cada etapa</h3></div></div><div class="packing-side"><div class="packing-tile"><img loading="lazy" src="https://www.newwestminstermoverspros.com/uploads/1/5/5/7/155752719/chatgpt-image-jun-11-2026-04-46-14-pm-6-1-51-31-pm_orig.jpg" alt="Itens e móveis preparados para mudança"><span>Proteção dos seus pertences</span></div><div class="packing-tile"><img loading="lazy" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Equipe carregando caixas em caminhão"><span>Equipe em operação</span></div></div></div><p style="font-size:10px;color:#8a95a4;text-align:center;margin:13px 0 0">Imagens ilustrativas. As equipes, veículos e materiais efetivamente utilizados são confirmados no orçamento.</p></div></section>
-<section class="section soft gallery-section" id="galeria"><div class="container"><div class="section-head"><div class="eyebrow">Nosso trabalho</div><h2>Uma mudança exige cuidado em cada etapa</h2><p>Veja referências visuais de embalagem, proteção de móveis, carregamento e organização de transporte.</p></div><div class="photo-gallery">
-<figure><img loading="lazy" src="https://www.newwestminstermoverspros.com/uploads/1/5/5/7/155752719/chatgpt-image-jun-11-2026-04-46-14-pm-6-1-51-31-pm_orig.jpg" alt="Profissionais protegendo um sofá com plástico e manta para mudança"><figcaption>Proteção de móveis</figcaption></figure>
-<figure><img loading="lazy" src="https://highendmovers.ca/images/packing.webp" alt="Profissionais embalando pratos e utensílios domésticos em papel de proteção"><figcaption>Embalagem de utensílios</figcaption></figure>
-<figure><img loading="lazy" src="https://teekayglobal.com/hero-movers.png" alt="Equipe uniformizada transportando sofá para caminhão de mudança"><figcaption>Movimentação de mobiliário</figcaption></figure>
-<figure><img loading="lazy" src="https://www.umzug-preise.de/cta-background-moving-truck-loading.jpg" alt="Equipe organizando móveis e caixas no caminhão baú"><figcaption>Carregamento organizado</figcaption></figure>
-<figure><img loading="lazy" src="https://images.surferseo.art/349aa405-be51-4ef7-a5b7-82dd83a45e09.png" alt="Profissionais protegendo móvel com manta antes do transporte"><figcaption>Proteção para transporte</figcaption></figure>
-<figure><img loading="lazy" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Equipe carregando caixas e móveis em caminhão de mudanças"><figcaption>Equipe em operação</figcaption></figure>
-<figure><img loading="lazy" src="https://www.ihaulimove.com/images/generated/packing-services.webp" alt="Profissionais embalando e protegendo móveis para mudança"><figcaption>Preparação de móveis</figcaption></figure>
-<figure><img loading="lazy" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Equipe carregando sofá e caixas em caminhão de mudança"><figcaption>Transporte residencial</figcaption></figure>
-</div><p class="gallery-disclaimer">Fotos ilustrativas de operações de mudança. Para apresentar a equipe e os uniformes oficiais da Atlas Transporte, utilize fotos reais da própria empresa.</p></div></section>
+<section class="section" id="embalagem"><div class="container"><div class="section-head"><div class="eyebrow">Cuidado em cada detalhe</div><h2>Seus pertences merecem atenção do começo ao fim</h2><p>Caixas identificadas, utensílios organizados e proteção adequada fazem parte de uma mudança bem planejada. Os serviços de embalagem são definidos conforme a cotação.</p></div><div class="packing-grid"><div class="packing-main"><img loading="lazy" src="https://movemate.ca/images/services/packing-and-unpacking-hero.webp" alt="Profissional organizando caixas e protegendo utensílios para transporte"><div class="image-caption"><small>Preparação e organização</small><h3>Embalagem cuidadosa para cada etapa</h3></div></div><div class="packing-side"><div class="packing-tile"><img loading="lazy" src="https://www.trendhizmet.com/content/upload/images/large/2026/03/sehir-ici-nakliyat-sirketleri.webp" alt="Itens e móveis preparados para mudança"><span>Proteção dos seus pertences</span></div><div class="packing-tile"><img loading="lazy" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Equipe carregando caixas em caminhão"><span>Equipe em operação</span></div></div></div><p style="font-size:10px;color:#8a95a4;text-align:center;margin:13px 0 0">Imagens ilustrativas. As equipes, veículos e materiais efetivamente utilizados são confirmados no orçamento.</p></div></section>
+<section class="section soft gallery-section" id="galeria"><div class="container"><div class="section-head"><div class="eyebrow">Cuidado em cada etapa</div><h2>O trabalho de uma mudança bem organizada</h2><p>Da proteção de louças e utensílios ao carregamento dos móveis no caminhão-baú.</p></div><div class="photo-gallery">
+<figure><img loading="lazy" src="https://assets.zyrosite.com/cdn-cgi/image/format%3Dauto%2Cw%3D1920%2Cfit%3Dcrop/ppnZ7ZU1t4U0RhjN/bild-herobereich-UFzfwAuwJWvyfTbq.png" alt="Equipe profissional carregando sofá em caminhão de mudanças"><figcaption>Carregamento de móveis</figcaption></figure>
+<figure><img loading="lazy" src="https://movemate.ca/images/services/packing-and-unpacking-hero.webp" alt="Profissional embalando pratos e utensílios em caixas de papelão"><figcaption>Embalagem de utensílios</figcaption></figure>
+<figure><img loading="lazy" src="https://threemovers.sfo2.cdn.digitaloceanspaces.com/media/movers-loading-boxes-furniture-moving-truck-driveway.png?hash=bc568f3382edf045dac2f8a17553afbbbfeac34f7dce118040c698b062fe605c" alt="Equipe carregando caixas e móveis em caminhão de mudança"><figcaption>Organização no caminhão</figcaption></figure>
+<figure><img loading="lazy" src="https://www.avenuemoving.com/assets/avenue-moving-yorkville-luxury-packing-F9dhWU1e.webp" alt="Equipe protegendo itens frágeis para mudança residencial"><figcaption>Proteção de itens frágeis</figcaption></figure>
+</div><p class="gallery-disclaimer">Imagens ilustrativas de operações de mudança. Não representam necessariamente a frota ou os profissionais próprios da Atlas Transporte.</p></div></section>
 <section class="section map-section" id="brasil"><div class="container map-grid"><div class="map-copy"><div class="eyebrow">Do seu endereço para o Brasil</div><h2>O Brasil é o nosso caminho.</h2><p>A Atlas Transporte atende solicitações de mudanças residenciais e comerciais entre cidades e estados. Informe sua origem e destino para consultarmos a disponibilidade da rota.</p><div class="map-bullets"><span><b>✓</b> Mudanças entre estados</span><span><b>✓</b> Rotas nacionais sob consulta</span><span><b>✓</b> Planejamento conforme volume e distância</span></div><a class="btn btn-gold" href="#contato">Consultar minha rota ↗</a></div>
-<div class="brazil-map-card"><img class="brazil-map" src="https://mapsvg.com/maps/geo-calibrated/brazil.svg" alt="Mapa geográfico do Brasil com os limites dos 27 estados" loading="lazy"><div class="map-regions"><span>NORTE</span><span>NORDESTE</span><span>CENTRO-OESTE</span><span>SUDESTE</span><span>SUL</span></div></div></div></section>
+<div class="brazil-map-card"><img class="brazil-map" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Brazil_states.svg/960px-Brazil_states.svg.png" alt="Mapa do Brasil com a divisão dos estados, fonte Wikimedia Commons" loading="lazy"><div class="map-regions"><span>NORTE</span><span>NORDESTE</span><span>CENTRO-OESTE</span><span>SUDESTE</span><span>SUL</span></div><p class="map-credit">Mapa: Wikimedia Commons · CC BY-SA 3.0</p></div></div></section>
 <section class="section soft"><div class="container"><div class="section-head"><div class="eyebrow">Como funciona</div><h2>Da primeira conversa ao novo endereço</h2><p>Um processo simples para entender sua necessidade e preparar uma proposta adequada.</p></div><div class="process"><article><h3>Fale com a equipe</h3><p>Conte o tipo de mudança e tire suas dúvidas pelo WhatsApp.</p></article><article><h3>Informe a rota</h3><p>Compartilhe origem, destino, data prevista e volume aproximado.</p></article><article><h3>Receba sua cotação</h3><p>Avaliamos os detalhes e apresentamos as condições do serviço.</p></article><article><h3>Planeje a mudança</h3><p>Com a proposta alinhada, confirme os detalhes e a programação.</p></article></div></div></section>
 <section class="section"><div class="container"><div class="section-head"><div class="eyebrow">Nosso compromisso</div><h2>Uma operação profissional em cada detalhe</h2><p>Nosso padrão de atendimento é baseado em planejamento, clareza e cuidado com os bens transportados.</p></div><div class="trust-features"><article class="feature"><i>⌖</i><h3>Planejamento de rota</h3><p>Origem, destino, distância e condições do acesso são considerados na cotação.</p></article><article class="feature"><i>◇</i><h3>Cuidado na embalagem</h3><p>Opções de proteção adequadas aos itens e ao serviço contratado.</p></article><article class="feature"><i>▣</i><h3>Equipe identificada</h3><p>Apresentação profissional e alinhamento das atividades da operação.</p></article><article class="feature"><i>✓</i><h3>Transparência</h3><p>Condições e detalhes combinados antes da confirmação do serviço.</p></article></div></div></section>
 <section class="section soft"><div class="container"><div class="section-head"><div class="eyebrow">A experiência dos clientes</div><h2>Nosso compromisso é merecer sua confiança</h2><p>Queremos que cada cliente tenha uma experiência positiva em todas as etapas da mudança.</p></div><div class="testimonials-note"><div class="stars">★★★★★</div><h3>Seu depoimento pode fazer parte desta história</h3><p>Este espaço está preparado para receber avaliações autênticas, com autorização dos clientes. Não publicamos comentários fictícios como se fossem experiências reais.</p></div></div></section>
