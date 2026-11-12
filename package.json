@@ -1,8 +1,8 @@
 {
-  "name": "atlas-nacional-mudancas",
+  "name": "atlas-transporte",
   "version": "1.0.0",
   "private": true,
-  "description": "Site institucional Atlas Nacional Mudanças",
+  "description": "Site institucional Atlas Transporte — mudanças nacionais e interestaduais",
   "type": "module",
   "scripts": {
     "start": "node server.js"
