@@ -50,6 +50,17 @@ const server = http.createServer(async (req, res) => {
 
     const url = new URL(req.url || "/", "http://localhost");
     let pathname = decodeURIComponent(url.pathname);
+    if (pathname === "/sitemap.xml") {
+      const xml = await buildSitemap();
+      res.writeHead(200, {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Content-Length": Buffer.byteLength(xml),
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-cache"
+      });
+      if (req.method === "HEAD") return res.end();
+      return res.end(xml);
+    }
     if (pathname === "/") pathname = "/index.html";
 
     const target = path.resolve(root, "." + pathname);
