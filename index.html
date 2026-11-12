@@ -7,7 +7,7 @@
 <meta name="description" content="Mudanças Brasil: transporte residencial e comercial para todo o Brasil. Embalagem, proteção e orçamento gratuito pelo WhatsApp.">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website"><meta property="og:title" content="Mudanças Brasil | Transporte Nacional"><meta property="og:description" content="Sua mudança em todo o Brasil. Atendimento nacional e orçamento sem compromisso."><meta property="og:locale" content="pt_BR">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--green:#006b35;--green2:#078a43;--deep:#004b29;--yellow:#ffd500;--yellow2:#ffe45c;--ink:#102b1d;--muted:#65766b;--pale:#f4f8f4;--line:#e0e9e1;--shadow:0 18px 55px #063b201c}
@@ -185,6 +185,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
 
+
+/* Correção definitiva de carregamento da foto do banner */
+.hero-visual{background:linear-gradient(145deg,#dce9df,#b8cbbd);isolation:isolate}
+.hero-visual img#heroMovingImage{display:block;z-index:0;object-fit:cover;object-position:center 48%;opacity:1}
+.hero-brand-overlay{position:absolute;z-index:3;top:16px;left:16px;width:148px;padding:5px 8px;background:#ffffffed;border:1px solid #fff;border-radius:9px;box-shadow:0 6px 20px #002b1830}
+.hero-brand-overlay img{position:static;width:100%;height:auto;min-height:0;object-fit:contain}
+.hero-visual:after{z-index:1}
+.hero-visual-label{z-index:4}
+.hero-visual.photo-unavailable{background:linear-gradient(135deg,#075b32,#13884b)}
+@media(max-width:760px){.hero-brand-overlay{width:124px;top:12px;left:12px}}
+
 </style>
 </head>
 <body>
@@ -197,7 +208,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 <main>
 <section class="hero" id="inicio"><div class="container hero-grid">
 <div class="hero-copy"><div class="eyebrow">Mudanças residenciais, comerciais e interestaduais</div><h1>Levamos sua mudança com <span>cuidado e confiança.</span></h1><p>Transporte nacional e interestadual com planejamento, atenção aos seus pertences e atendimento próximo em cada etapa.</p><div class="hero-actions"><a class="btn btn-yellow" href="#contato">◉ SOLICITAR ORÇAMENTO AGORA <span>›</span></a><a class="btn btn-glass" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Mudanças%20Brasil." target="_blank" rel="noopener">FALAR NO WHATSAPP</a></div><div class="hero-proof"><span><b>✓</b> Atendimento nacional</span><span><b>✓</b> Planejamento de rota</span><span><b>✓</b> Mais de 20 anos de experiência</span></div></div>
-<div class="hero-visual"><img src="/assets/mudancas-brasil-hero.webp" alt="Caminhão-baú Mudanças Brasil com funcionários uniformizados carregando um sofá protegido para transporte" fetchpriority="high"><div class="hero-visual-label"><span>MUDANÇAS BRASIL</span>Sua mudança começa com cuidado em cada detalhe.</div></div>
+<div class="hero-visual"><img id="heroMovingImage" src="https://images.unsplash.com/photo-1698917414969-feade59e3343?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=1600" data-fallback="https://images.unsplash.com/photo-1715645948484-da40dd56bc93?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=1600" alt="Profissional descarregando móveis de um caminhão de mudanças" fetchpriority="high" loading="eager" referrerpolicy="no-referrer"><div class="hero-brand-overlay"><img src="/assets/mudancas-brasil-logo.jpg" alt="Mudanças Brasil"></div><div class="hero-visual-label"><span>MUDANÇAS BRASIL</span>Sua mudança começa com cuidado em cada detalhe.</div></div>
 </div></section>
 <div class="container benefits">
 <div class="benefit"><div class="benefit-icon">✓</div><div><strong>Transporte Seguro</strong><small>Seus bens com proteção</small></div></div>
@@ -252,6 +263,19 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 <a class="wa-float" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Mudanças%20Brasil." aria-label="Chamar no WhatsApp" target="_blank" rel="noopener"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 .8A15 15 0 0 0 3.1 23.5L1 31l7.7-2A15 15 0 1 0 16 .8Zm0 27.3a12.2 12.2 0 0 1-6.2-1.7l-.4-.2-4.6 1.2 1.2-4.5-.3-.5A12.2 12.2 0 1 1 16 28.1Zm6.7-9.1c-.4-.2-2.3-1.1-2.7-1.2-.4-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3.1-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8l.6-.7.4-.7c.1-.2 0-.5 0-.7-.1-.2-.9-2.1-1.2-2.8-.3-.7-.6-.6-.9-.6h-.8c-.3 0-.7.1-1 .5-.4.4-1.3 1.3-1.3 3.1s1.3 3.5 1.5 3.8c.2.2 2.6 4 6.3 5.6.9.4 1.6.6 2.1.7.9.3 1.7.2 2.3.1.7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.2-.4-.3-.8-.5Z"/></svg></a>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
+const heroMovingImage=document.getElementById('heroMovingImage');
+if(heroMovingImage){
+ heroMovingImage.addEventListener('error',()=>{
+  if(heroMovingImage.dataset.fallback && !heroMovingImage.dataset.fallbackUsed){
+   heroMovingImage.dataset.fallbackUsed='1';
+   heroMovingImage.src=heroMovingImage.dataset.fallback;
+  }else{
+   heroMovingImage.closest('.hero-visual').classList.add('photo-unavailable');
+   heroMovingImage.remove();
+  }
+ });
+}
+
 const menu=document.getElementById('menuBtn'),links=document.getElementById('navLinks');
 menu.addEventListener('click',()=>{const open=links.classList.toggle('open');menu.setAttribute('aria-expanded',String(open));menu.textContent=open?'×':'☰'});
 links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{links.classList.remove('open');menu.setAttribute('aria-expanded','false');menu.textContent='☰'}));
