@@ -55,7 +55,7 @@ function makePDF(fields,photos,protocol){
     const photo=photos[i];
     if(doc.y>560)doc.addPage();
     doc.font("Helvetica").fontSize(10).fillColor("#222222").text("Foto "+(i+1)+" — "+pdfText(photo.name));
-    try{doc.image(photo.buffer,{fit:[490,220],align:"center"});doc.moveDown(1)}catch{doc.text("Não foi possível incorporar esta imagem.")}
+    try{doc.image(photo.buffer,48,doc.y+8,{fit:[490,210],align:"center"});doc.y+=232;doc.moveDown(.5)}catch{doc.text("Não foi possível incorporar esta imagem.")}
    }
   }
   doc.end();
