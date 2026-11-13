@@ -206,7 +206,42 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 .hero-visual img.image-load-error{visibility:hidden}
 @media(max-width:760px){.hero-visual{height:275px;border-radius:12px}.hero-visual img{border-radius:12px}}
 
-/* Imagens: renderização nativa em alta qualidade, sem filtros que alterem as fotos */\nimg{image-rendering:auto;-webkit-transform:translateZ(0);backface-visibility:hidden}\n.hero-visual img{object-fit:cover;object-position:center 48%;filter:none}\n</style>
+/* Imagens: renderização nativa em alta qualidade, sem filtros que alterem as fotos */\nimg{image-rendering:auto;-webkit-transform:translateZ(0);backface-visibility:hidden}\n.hero-visual img{object-fit:cover;object-position:center 48%;filter:none}\n
+/* Ajuste compacto para celulares - Mudanças Brasil */
+@media(max-width:767px){
+html,body{max-width:100%;overflow-x:clip}
+.container{width:calc(100% - 28px)!important;max-width:100%}
+.nav{height:auto!important;min-height:62px!important;gap:8px!important}
+.brand img,.logo{width:clamp(145px,42vw,190px)!important;height:auto!important;max-height:58px!important}
+.nav-quote{font-size:10px!important;padding:10px 9px!important;white-space:nowrap}
+.hero{padding:0!important}.hero-grid{padding:26px 0!important;gap:16px!important;min-height:0!important}
+.hero h1{font-size:clamp(29px,8.4vw,40px)!important;line-height:1.12!important;letter-spacing:-.035em!important;margin:10px 0 12px!important}
+.hero p,.hero-copy>p{font-size:13px!important;line-height:1.55!important}
+.hero-visual,.hero-visual img{min-height:205px!important;max-height:255px!important}
+.hero-actions{gap:8px!important}.hero-actions .btn{padding:11px 13px!important;font-size:11px!important}
+.hero-proof{margin-top:15px!important;gap:8px!important}
+.benefits{padding:8px!important;gap:5px!important}.benefit{padding:6px 3px!important;gap:7px!important}
+.section{padding:34px 0!important}.section-head{margin-bottom:20px!important}.section-head h2{font-size:clamp(23px,6.3vw,30px)!important}
+.services,.pack-grid,.process-grid{gap:10px!important}.service,.pack-card,.process-card{padding:17px!important;min-height:0!important;border-radius:12px!important}
+.service h3,.pack-card h3{font-size:16px!important}.service p,.pack-card p{font-size:12px!important;line-height:1.55!important}
+.quote-section{padding:36px 0!important}.quote-card{padding:16px!important}.quote-grid{gap:18px!important}
+.footer{padding:30px 0 16px!important}.footer-grid{grid-template-columns:1fr!important;gap:18px!important}.footer-grid>div:first-child{grid-column:auto!important}
+.footer-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px!important}.footer-links a{overflow-wrap:anywhere;font-size:11px!important}
+.footer-bottom{margin-top:18px!important;padding-top:12px!important;gap:4px!important}
+.wa-float{width:48px!important;height:48px!important;right:12px!important;bottom:12px!important}
+/* Páginas internas */
+.top{font-size:10px!important;padding:5px 0!important}.top .container{gap:3px!important}
+header .nav{padding:5px 0!important;flex-wrap:wrap}
+header .nav>.btn{font-size:10px!important;padding:9px 10px!important;letter-spacing:0!important}
+.navlinks{display:none!important}
+.hero>.container{padding-top:30px!important;padding-bottom:30px!important}
+.hero>.container h1{font-size:clamp(29px,8.4vw,38px)!important}
+main{padding:25px 0 42px!important}.content h2{font-size:21px!important;margin-top:25px!important}.content p,.content li{font-size:14px!important}
+.related{padding:17px!important;margin-top:28px!important}.related-links{gap:7px!important}.related-links a{font-size:11px!important;padding:7px 10px!important}
+.footgrid{grid-template-columns:1fr!important;gap:17px!important}.footgrid>div:first-child{grid-column:auto!important}.footlinks{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}.footlinks a{overflow-wrap:anywhere}
+}
+@media(max-width:390px){.nav-quote{font-size:9px!important;padding:8px!important}.hero-visual,.hero-visual img{min-height:180px!important}.footer-links,.footlinks{grid-template-columns:1fr!important}}
+</style>
 <!-- Google Tag Manager -->
 <script>
   window.dataLayer = window.dataLayer || [];
