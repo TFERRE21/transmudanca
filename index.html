@@ -241,6 +241,12 @@ main{padding:25px 0 42px!important}.content h2{font-size:21px!important;margin-t
 .footgrid{grid-template-columns:1fr!important;gap:17px!important}.footgrid>div:first-child{grid-column:auto!important}.footlinks{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}.footlinks a{overflow-wrap:anywhere}
 }
 @media(max-width:390px){.nav-quote{font-size:9px!important;padding:8px!important}.hero-visual,.hero-visual img{min-height:180px!important}.footer-links,.footlinks{grid-template-columns:1fr!important}}
+
+/* HERO-SHARP-2026: keep the existing photo crisp and free from overlays */
+.hero-visual{background:#eaf1ea;overflow:hidden;isolation:isolate}
+.hero-visual img{image-rendering:auto;filter:none!important;transform:none!important;backface-visibility:visible;object-fit:cover;object-position:center;max-width:100%}
+.hero-visual:after{display:none!important}
+@media(max-width:760px){.hero-visual{min-height:0!important;aspect-ratio:1.55/1;border-radius:14px}.hero-visual img{min-height:0!important;width:100%;height:100%;object-fit:cover;object-position:center}}
 </style>
 <!-- Google Tag Manager -->
 <script>
