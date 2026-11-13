@@ -1,4 +1,5 @@
 import http from "node:http";
+import { handleQuote } from "./quote-handler.js";
 import { readFile, stat, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +55,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     const url = new URL(req.url || "/", "http://localhost");
+    if (url.pathname === "/api/orcamentos" && req.method === "POST") return await handleQuote(req, res);
     let pathname = decodeURIComponent(url.pathname);
     if (pathname === "/sitemap.xml") {
       const xml = await buildSitemap();
