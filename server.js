@@ -49,7 +49,7 @@ const mime = {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (req.method !== "GET" && req.method !== "HEAD") {
+    if (req.method !== "GET" && req.method !== "HEAD" && !(req.method === "POST" && (req.url || "").split("?")[0] === "/api/orcamentos")) {
       res.writeHead(405, { "Allow": "GET, HEAD", "Content-Type": "text/plain; charset=utf-8" });
       return res.end("Method Not Allowed");
     }
