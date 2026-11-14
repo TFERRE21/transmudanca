@@ -247,6 +247,14 @@ main{padding:25px 0 42px!important}.content h2{font-size:21px!important;margin-t
 .hero-visual img{image-rendering:auto;filter:none!important;transform:none!important;backface-visibility:visible;object-fit:cover;object-position:center;max-width:100%}
 .hero-visual:after{display:none!important}
 @media(max-width:760px){.hero-visual{min-height:0!important;aspect-ratio:1.55/1;border-radius:14px}.hero-visual img{min-height:0!important;width:100%;height:100%;object-fit:cover;object-position:center}}
+
+/* Banner: orçamento online em destaque e botões responsivos */
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.hero-actions .btn{white-space:normal;text-align:center;justify-content:center}
+.hero-actions .btn-online{background:#fff;color:#086236;border:2px solid #fff;font-weight:800}
+.hero-actions .btn-online:hover{background:#f1fff5;border-color:#d6f8de}
+@media(max-width:760px){.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.hero-actions .btn{width:100%;min-width:0;font-size:11px;padding:12px 9px}.hero-actions .btn:first-child{grid-column:1/-1}.hero-actions .btn-online{font-size:11px}}
+@media(max-width:390px){.hero-actions{grid-template-columns:1fr}.hero-actions .btn:first-child{grid-column:auto}}
 </style>
 <!-- Google Tag Manager -->
 <script>
@@ -283,7 +291,7 @@ main{padding:25px 0 42px!important}.content h2{font-size:21px!important;margin-t
 </div></header>
 <main>
 <section class="hero" id="inicio"><div class="container hero-grid">
-<div class="hero-copy"><div class="eyebrow">Mudanças residenciais, comerciais e interestaduais</div><h1>Levamos sua mudança com <span>cuidado e confiança.</span></h1><p>Transporte nacional e interestadual com planejamento, atenção aos seus pertences e atendimento próximo em cada etapa.</p><div class="hero-actions"><a class="btn btn-yellow" href="#contato">◉ SOLICITAR ORÇAMENTO AGORA <span>›</span></a><a class="btn btn-glass" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Mudanças%20Brasil." target="_blank" rel="noopener">FALAR NO WHATSAPP</a></div><div class="hero-proof"><span><b>✓</b> Atendimento nacional</span><span><b>✓</b> Planejamento de rota</span><span><b>✓</b> Mais de 20 anos de experiência</span></div></div>
+<div class="hero-copy"><div class="eyebrow">Mudanças residenciais, comerciais e interestaduais</div><h1>Levamos sua mudança com <span>cuidado e confiança.</span></h1><p>Transporte nacional e interestadual com planejamento, atenção aos seus pertences e atendimento próximo em cada etapa.</p><div class="hero-actions"><a class="btn btn-yellow" href="#contato">◉ SOLICITAR ORÇAMENTO AGORA <span>›</span></a><a class="btn btn-online" href="/orcamento-online.html">▣ ORÇAMENTO ONLINE <span>›</span></a><a class="btn btn-glass" href="https://wa.me/5561998036248?text=Ol%C3%A1%21%20Quero%20solicitar%20um%20or%C3%A7amento%20com%20a%20Mudanças%20Brasil." target="_blank" rel="noopener">FALAR NO WHATSAPP</a></div><div class="hero-proof"><span><b>✓</b> Atendimento nacional</span><span><b>✓</b> Planejamento de rota</span><span><b>✓</b> Mais de 20 anos de experiência</span></div></div>
 <div class="hero-visual"><img id="heroMovingImage" src="/assets/mudancas-brasil-hero.webp" alt="Equipe uniformizada da Mudanças Brasil transportando um sofá protegido para o caminhão-baú da empresa" fetchpriority="high" loading="eager" decoding="async"></div>
 </div></section>
 <div class="container benefits">
