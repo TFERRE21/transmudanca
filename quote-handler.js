@@ -6,8 +6,8 @@ import { randomUUID } from "node:crypto";
 const CONTACT_EMAIL = process.env.QUOTE_TO_EMAIL || "mudancasbrasiltransporte@gmail.com";
 const MAX_UPLOAD = 3 * 1024 * 1024;
 const MAX_TOTAL = 80 * 1024 * 1024;
-const FIELDS = ["nome","email","telefone","resposta","origem","destino","enderecoOrigem","enderecoDestino","data","tipo","moveis","observacoes","consentimento"];
-const LABELS = {nome:"Nome",email:"E-mail",telefone:"WhatsApp",resposta:"Resposta preferida",origem:"Origem",destino:"Destino",enderecoOrigem:"Detalhes da origem",enderecoDestino:"Detalhes do destino",data:"Data prevista",tipo:"Tipo de mudança",moveis:"Lista de móveis e materiais",observacoes:"Observações"};
+const FIELDS = ["nome","email","telefone","resposta","origem","destino","enderecoOrigem","enderecoDestino","data","tipo","moveis","quantidadeCaixas","observacoes","consentimento"];
+const LABELS = {nome:"Nome",email:"E-mail",telefone:"WhatsApp",resposta:"Resposta preferida",origem:"Origem",destino:"Destino",enderecoOrigem:"Detalhes da origem",enderecoDestino:"Detalhes do destino",data:"Data prevista",tipo:"Tipo de mudança",moveis:"Lista de móveis e materiais",quantidadeCaixas:"Quantidade de caixas",observacoes:"Observações"};
 const clean = value => String(value || "").replace(/[\x00-\x1f\x7f]/g," ").trim();
 const htmlEscape = value => clean(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const pdfText = value => clean(value).replace(/[^\x20-\x7e\u00c0-\u00ff\u0100-\u017f]/g,"?");
@@ -70,6 +70,7 @@ export async function handleQuote(req,res){
   const {fields,photos}=await parseRequest(req);
   if(!fields.nome?.trim()||!fields.email?.trim()||!fields.telefone?.trim()||!fields.origem?.trim()||!fields.destino?.trim()||!fields.moveis?.trim()||fields.consentimento!=="on")return reply(400,{ok:false,error:"Preencha os campos obrigatórios e autorize o tratamento dos dados."});
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)||fields.email.length>200)return reply(400,{ok:false,error:"E-mail inválido."});
+  if(!/^(0|[1-9][0-9]{0,4})$/.test(String(fields.quantidadeCaixas??""))||Number(fields.quantidadeCaixas)>10000)return reply(400,{ok:false,error:"Informe a quantidade de caixas (0 se não houver)."});
   if(fields.moveis.length>12000)return reply(400,{ok:false,error:"Lista de móveis muito extensa."});
   const protocol=randomUUID().slice(0,8).toUpperCase();
   const optimized=[];
