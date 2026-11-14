@@ -1,5 +1,6 @@
 import http from "node:http";
 import { handleQuote } from "./quote-handler.js";
+import { handleAdmin } from "./admin-api.js";
 import { readFile, stat, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,7 +15,7 @@ async function buildSitemap() {
   const htmlFiles = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
     .map((entry) => entry.name)
-    .filter((name) => !name.startsWith(".") && !["404.html", "500.html"].includes(name))
+    .filter((name) => !name.startsWith(".") && !["404.html", "500.html", "painel-adm.html"].includes(name))
     .sort((a, b) => a === "index.html" ? -1 : b === "index.html" ? 1 : a.localeCompare(b, "pt-BR"));
 
   const urls = [];
@@ -49,13 +50,14 @@ const mime = {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (req.method !== "GET" && req.method !== "HEAD" && !(req.method === "POST" && (req.url || "").split("?")[0] === "/api/orcamentos")) {
+    if (req.method !== "GET" && req.method !== "HEAD" && !(req.method === "POST" && ((req.url || "").split("?")[0] === "/api/orcamentos" || (req.url || "").split("?")[0].startsWith("/api/admin/")))) {
       res.writeHead(405, { "Allow": "GET, HEAD", "Content-Type": "text/plain; charset=utf-8" });
       return res.end("Method Not Allowed");
     }
 
     const url = new URL(req.url || "/", "http://localhost");
     if (url.pathname === "/api/orcamentos" && req.method === "POST") return await handleQuote(req, res);
+    if (url.pathname.startsWith("/api/admin/")) return await handleAdmin(req,res,url);
     let pathname = decodeURIComponent(url.pathname);
     if (pathname === "/sitemap.xml") {
       const xml = await buildSitemap();
@@ -69,6 +71,9 @@ const server = http.createServer(async (req, res) => {
       return res.end(xml);
     }
     if (pathname === "/") pathname = "/index.html";
+    if (pathname === "/admin-api.js" || pathname === "/server.js" || pathname === "/quote-handler.js" || pathname === "/.env" || pathname === "/.env.example" || pathname === "/package.json" || pathname.includes("/.")) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("Not Found");
+    }
 
     const target = path.resolve(root, "." + pathname);
     if (target !== root && !target.startsWith(root + path.sep)) {
