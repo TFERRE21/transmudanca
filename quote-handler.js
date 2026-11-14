@@ -1,10 +1,11 @@
 import Busboy from "busboy";
 import PDFDocument from "pdfkit";
+import sharp from "sharp";
 import { randomUUID } from "node:crypto";
 
 const CONTACT_EMAIL = process.env.QUOTE_TO_EMAIL || "mudancasbrasiltransporte@gmail.com";
 const MAX_UPLOAD = 3 * 1024 * 1024;
-const MAX_TOTAL = 27 * 1024 * 1024;
+const MAX_TOTAL = 80 * 1024 * 1024;
 const FIELDS = ["nome","email","telefone","resposta","origem","destino","enderecoOrigem","enderecoDestino","data","tipo","moveis","observacoes","consentimento"];
 const LABELS = {nome:"Nome",email:"E-mail",telefone:"WhatsApp",resposta:"Resposta preferida",origem:"Origem",destino:"Destino",enderecoOrigem:"Detalhes da origem",enderecoDestino:"Detalhes do destino",data:"Data prevista",tipo:"Tipo de mudança",moveis:"Lista de móveis e materiais",observacoes:"Observações"};
 const clean = value => String(value || "").replace(/[\x00-\x1f\x7f]/g," ").trim();
@@ -16,7 +17,7 @@ function parseRequest(req){
   const fields={},photos=[];
   let total=0,failed=false;
   const fail=e=>{if(!failed){failed=true;reject(e)}};
-  const bb=Busboy({headers:req.headers,limits:{files:8,fileSize:MAX_UPLOAD,fields:20,fieldSize:15000,parts:30}});
+  const bb=Busboy({headers:req.headers,limits:{files:50,fileSize:MAX_UPLOAD,fields:20,fieldSize:15000,parts:75}});
   bb.on("field",(name,value)=>{if(FIELDS.includes(name))fields[name]=value});
   bb.on("file",(name,stream,info)=>{
    if(name!=="fotos"){stream.resume();return}
@@ -26,7 +27,7 @@ function parseRequest(req){
    stream.on("data",chunk=>{length+=chunk.length;total+=chunk.length;if(total>MAX_TOTAL)fail(new Error("Arquivos muito grandes."));else chunks.push(chunk)});
    stream.on("end",()=>{if(!failed)photos.push({name:clean(info.filename).slice(0,100),type:info.mimeType,buffer:Buffer.concat(chunks)})});
   });
-  bb.on("filesLimit",()=>fail(new Error("Máximo de 8 fotos.")));
+  bb.on("filesLimit",()=>fail(new Error("Máximo de 50 fotos.")));
   bb.on("partsLimit",()=>fail(new Error("Muitos campos enviados.")));
   bb.on("error",fail);
   bb.on("close",()=>{if(!failed)resolve({fields,photos})});
@@ -71,7 +72,13 @@ export async function handleQuote(req,res){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)||fields.email.length>200)return reply(400,{ok:false,error:"E-mail inválido."});
   if(fields.moveis.length>12000)return reply(400,{ok:false,error:"Lista de móveis muito extensa."});
   const protocol=randomUUID().slice(0,8).toUpperCase();
-  const pdf=await makePDF(fields,photos,protocol);
+  const optimized=[];
+  for(const photo of photos){
+   try{const buffer=await sharp(photo.buffer,{limitInputPixels:25000000}).rotate().resize({width:1100,height:1100,fit:"inside",withoutEnlargement:true}).jpeg({quality:66,mozjpeg:true}).toBuffer();optimized.push({...photo,buffer,type:"image/jpeg"})}
+   catch{return reply(400,{ok:false,error:"Uma das fotos não pôde ser processada. Envie apenas JPG ou PNG válidos."})}
+  }
+  const pdf=await makePDF(fields,optimized,protocol);
+  if(pdf.length>25*1024*1024)return reply(413,{ok:false,error:"O PDF ficou muito grande. Reduza a quantidade de fotos ou envie em partes."});
   const summary=Object.entries(LABELS).map(([key,label])=>"<p><strong>"+label+":</strong> "+htmlEscape(fields[key]||"Não informado")+"</p>").join("");
   const result=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.QUOTE_FROM_EMAIL,to:[CONTACT_EMAIL],reply_to:fields.email,subject:"Novo orçamento Mudanças Brasil — "+protocol,html:"<h2>Solicitação de orçamento online</h2><p>Protocolo: "+protocol+"</p>"+summary+"<p>Fotos recebidas: "+photos.length+". O PDF completo está anexo.</p>",attachments:[{filename:"orcamento-mudancas-"+protocol+".pdf",content:pdf.toString("base64")}]})});
   if(!result.ok){console.error("Falha Resend orçamento",result.status,(await result.text()).slice(0,500));return reply(502,{ok:false,error:"Não foi possível enviar o e-mail. Tente pelo WhatsApp."})}
