@@ -52,6 +52,13 @@ const leadQueries=[
 const leadRequest=/\b(preciso|procuro|procurando|busco|necessito|solicito|quero contratar|cotacao|orcamento|pedido de frete|frete disponivel|carga disponivel)\b/;
 const leadTransport=/\b(mudanca|mudancas|mobiliario|moveis|transportar|transporte|frete|carreto|caminhao|bens)\b/;
 const leadReject=/\b(como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas oferece|oferecemos|nossos servicos)\b/;
+function contactFromPosting(r){
+ const txt=String(r.description||"")+" "+String(r.title||"");
+ // Apenas contatos fornecidos no próprio pedido público, nunca de perfis privados.
+ const email=txt.match(/(?:contato|email|e-mail|or[cç]amento)[^\\n]{0,35}?([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,})/i)?.[1]||"";
+ const phone=txt.match(/(?:whats(?:app)?|telefone|tel\\.?|contato)[^0-9]{0,16}((?:\\+?55\\s*)?\\(?\\d{2}\\)?[\\s.-]*9?\\d{4}[\\s.-]*\\d{4})/i)?.[1]||"";
+ return {email:esc(email),phone:esc(phone),contactNote:email||phone?"Contato divulgado expressamente no texto do anúncio público; confira a finalidade antes de usar.":"Contato não divulgado no resultado. Abra o anúncio para responder pelo canal autorizado."};
+}
 function isPublicRequest(item){const t=normalize(item.title+" "+(item.description||""));return leadRequest.test(t)&&leadTransport.test(t)&&!leadReject.test(t);}
 async function scanPublicRequests(){
  const results=await Promise.allSettled(leadQueries.map(async q=>{
@@ -64,7 +71,7 @@ async function scanPublicRequests(){
  }));
  const x=await load(),known=new Set(x.requests.map(v=>v.link));let added=0;
  for(const r of results.filter(v=>v.status==="fulfilled").flatMap(v=>v.value)){
-  if(known.has(r.link))continue;known.add(r.link);x.requests.unshift({...r,id:randomBytes(10).toString("hex"),source:"pedido_publico",status:"novo",discoveredAt:new Date().toISOString(),name:"Não informado",email:"",phone:"",origin:"",destination:"",originUF:"",destinationUF:"",contactNote:"Contato não verificado. Consulte somente o canal que o anunciante disponibilizou para receber orçamentos."});added++;
+  if(known.has(r.link))continue;known.add(r.link);x.requests.unshift({...r,id:randomBytes(10).toString("hex"),source:"pedido_publico",status:"novo",discoveredAt:new Date().toISOString(),name:"Não informado",...contactFromPosting(r),origin:"",destination:"",originUF:"",destinationUF:""});added++;
  }
  x.requests=x.requests.slice(0,1000);await save(x);
  return {added,checked:results.length,unavailable:results.filter(v=>v.status==="rejected").length};
