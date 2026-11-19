@@ -1,9 +1,8 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHmac } from "node:crypto";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {getCapture,scanPublic,setCaptureStatus} from "./capture-robot.js";
-const dir=process.env.ADMIN_DATA_DIR||path.join(path.dirname(fileURLToPath(import.meta.url)),".admin-data");
+const dir=process.env.ADMIN_DATA_DIR||"/data/mudancas-brasil";
 const file=path.join(dir,"clientes.json");
 const secret=process.env.ADMIN_SESSION_SECRET||"";
 const username=process.env.ADMIN_USERNAME||"";
