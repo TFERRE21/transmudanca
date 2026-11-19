@@ -43,7 +43,7 @@ $("logout").onclick=async()=>{await api("/api/admin/logout","POST");$("app").cla
 const capDate=v=>v?new Date(v).toLocaleString("pt-BR"):"—";
 const capStatusSelect=(r)=>'<select class="cap-change" data-id="'+escape(r.id)+'">'+[['novo','Novo'],['em_analise','Em análise'],['contatado','Contatado'],['descartado','Descartado']].map(([v,t])=>'<option value="'+v+'" '+(r.status===v?'selected':'')+'>'+t+'</option>').join('')+'</select>';
 let capData={inquiries:[],opportunities:[]};
-const capUF=value=>{const v=String(value||"").toUpperCase();const m=v.match(/(?:^|[\\/ ,;()—-])(?:AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)(?=$|[\\/ ,;()—-])/);return m?m[0].trim().replace(/^[\\/ ,;()—-]+/,""):""};
+const capUF=value=>{const match=String(value||"").toUpperCase().match(/(?:^|[^A-Z])(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)(?=$|[^A-Z])/);return match?match[1]:""};
 function capFiltered(items){const ori=$("capOriginUF").value,dest=$("capDestinationUF").value,source=$("capSource").value,status=$("capFilterStatus").value,q=$("capQuery").value.trim().toLowerCase();return items.filter(r=>(!ori||capUF(r.originUF||r.origin)===ori)&&(!dest||capUF(r.destinationUF||r.destination)===dest)&&(!source||r.source===source)&&(!status||r.status===status)&&(!q||[r.name,r.title,r.origin,r.destination,r.term,r.phone,r.email].some(s=>String(s||"").toLowerCase().includes(q))))}
 function capRender(){const inquiries=capFiltered(capData.inquiries),opportunities=capFiltered(capData.opportunities);
  $("capInquiryCount").textContent="("+inquiries.length+")";$("capOpportunityCount").textContent="("+opportunities.length+")";
