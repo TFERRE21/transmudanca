@@ -1,6 +1,7 @@
 import http from "node:http";
 import { handleQuote } from "./quote-handler.js";
 import { handleAdmin } from "./admin-api.js";
+import { startCaptureRobot } from "./capture-robot.js";
 import { readFile, stat, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -101,6 +102,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+startCaptureRobot();
 server.listen(port, host, () => {
   console.log(`Vértice Mudanças disponível em http://${host}:${port}`);
 });
