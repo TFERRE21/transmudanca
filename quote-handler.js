@@ -5,7 +5,10 @@ import { randomUUID } from "node:crypto";
 
 const CONTACT_EMAIL = process.env.QUOTE_TO_EMAIL || "mudancasbrasiltransporte@gmail.com";
 const MAX_UPLOAD = 3 * 1024 * 1024;
-const MAX_TOTAL = 80 * 1024 * 1024;
+const MAX_TOTAL = 92 * 1024 * 1024;
+const VIDEO_TYPES = ["video/mp4","video/webm","video/quicktime"];
+const MAX_VIDEO = 8 * 1024 * 1024;
+const MAX_VIDEO_TOTAL = 12 * 1024 * 1024;
 const FIELDS = ["nome","email","telefone","resposta","origem","destino","enderecoOrigem","enderecoDestino","elevadorOrigem","elevadorDestino","data","tipo","moveis","quantidadeCaixas","observacoes","consentimento"];
 const LABELS = {nome:"Nome",email:"E-mail",telefone:"WhatsApp",resposta:"Resposta preferida",origem:"Origem",destino:"Destino",enderecoOrigem:"Detalhes da origem",enderecoDestino:"Detalhes do destino",elevadorOrigem:"Elevador no imóvel de origem",elevadorDestino:"Elevador no imóvel de destino",data:"Data prevista",tipo:"Tipo de mudança",moveis:"Lista de móveis e materiais",quantidadeCaixas:"Quantidade de caixas",observacoes:"Observações"};
 const clean = value => String(value || "").replace(/[\x00-\x1f\x7f]/g," ").trim();
@@ -14,23 +17,25 @@ const pdfText = value => clean(value).replace(/[^\x20-\x7e\u00c0-\u00ff\u0100-\u
 
 function parseRequest(req){
  return new Promise((resolve,reject)=>{
-  const fields={},photos=[];
+  const fields={},photos=[],videos=[];
+  let videoBytes=0;
   let total=0,failed=false;
   const fail=e=>{if(!failed){failed=true;reject(e)}};
-  const bb=Busboy({headers:req.headers,limits:{files:50,fileSize:MAX_UPLOAD,fields:20,fieldSize:15000,parts:75}});
+  const bb=Busboy({headers:req.headers,limits:{files:52,fileSize:MAX_VIDEO,fields:20,fieldSize:15000,parts:80}});
   bb.on("field",(name,value)=>{if(FIELDS.includes(name))fields[name]=value});
   bb.on("file",(name,stream,info)=>{
-   if(name!=="fotos"){stream.resume();return}
+   if(name!=="fotos"&&name!=="videos"){stream.resume();return}
    const chunks=[];let length=0;
-   if(!["image/jpeg","image/png"].includes(info.mimeType)){fail(new Error("Use apenas fotos JPG ou PNG."));stream.resume();return}
-   stream.on("limit",()=>fail(new Error("Uma foto excede 3 MB.")));
-   stream.on("data",chunk=>{length+=chunk.length;total+=chunk.length;if(total>MAX_TOTAL)fail(new Error("Arquivos muito grandes."));else chunks.push(chunk)});
-   stream.on("end",()=>{if(!failed)photos.push({name:clean(info.filename).slice(0,100),type:info.mimeType,buffer:Buffer.concat(chunks)})});
+   if(name==="fotos"&&!["image/jpeg","image/png"].includes(info.mimeType)){fail(new Error("Use apenas fotos JPG ou PNG."));stream.resume();return}
+   if(name==="videos"&&!VIDEO_TYPES.includes(info.mimeType)){fail(new Error("Use apenas vídeos MP4, MOV ou WebM."));stream.resume();return}
+   stream.on("limit",()=>fail(new Error("Arquivo excede 8 MB.")));
+   stream.on("data",chunk=>{length+=chunk.length;total+=chunk.length;if(name==="videos")videoBytes+=chunk.length;if((name==="fotos"&&length>MAX_UPLOAD)||(name==="videos"&&videoBytes>MAX_VIDEO_TOTAL)||total>MAX_TOTAL)fail(new Error("Arquivos muito grandes."));else chunks.push(chunk)});
+   stream.on("end",()=>{if(!failed)(name==="fotos"?photos:videos).push({name:clean(info.filename).slice(0,100),type:info.mimeType,buffer:Buffer.concat(chunks)})});
   });
   bb.on("filesLimit",()=>fail(new Error("Máximo de 50 fotos.")));
   bb.on("partsLimit",()=>fail(new Error("Muitos campos enviados.")));
   bb.on("error",fail);
-  bb.on("close",()=>{if(!failed)resolve({fields,photos})});
+  bb.on("close",()=>{if(!failed){if(photos.length>50||videos.length>2)reject(new Error("Máximo de 50 fotos e 2 vídeos."));else resolve({fields,photos,videos})}});
   req.pipe(bb);
  });
 }
@@ -64,10 +69,10 @@ function makePDF(fields,photos,protocol){
 }
 export async function handleQuote(req,res){
  const reply=(status,data)=>{res.writeHead(status,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"});res.end(JSON.stringify(data))};
- if(!process.env.RESEND_API_KEY||!process.env.QUOTE_FROM_EMAIL){reply(503,{ok:false,error:"O envio de orçamento por e-mail ainda não está configurado. Use o WhatsApp."});return}
+ if(!process.env.RESEND_API_KEY||!process.env.QUOTE_FROM_EMAIL){reply(503,{ok:false,error:"O envio de orçamento por e-mail ainda não está configurado. Tente novamente mais tarde."});return}
  if(!req.headers["content-type"]?.startsWith("multipart/form-data")){reply(415,{ok:false,error:"Formato inválido."});return}
  try{
-  const {fields,photos}=await parseRequest(req);
+  const {fields,photos,videos}=await parseRequest(req);
   if(!fields.nome?.trim()||!fields.email?.trim()||!fields.telefone?.trim()||!fields.origem?.trim()||!fields.destino?.trim()||!fields.moveis?.trim()||fields.consentimento!=="on")return reply(400,{ok:false,error:"Preencha os campos obrigatórios e autorize o tratamento dos dados."});
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)||fields.email.length>200)return reply(400,{ok:false,error:"E-mail inválido."});
   if(!/^(0|[1-9][0-9]{0,4})$/.test(String(fields.quantidadeCaixas??""))||Number(fields.quantidadeCaixas)>10000)return reply(400,{ok:false,error:"Informe a quantidade de caixas (0 se não houver)."});
@@ -80,10 +85,10 @@ export async function handleQuote(req,res){
    catch{return reply(400,{ok:false,error:"Uma das fotos não pôde ser processada. Envie apenas JPG ou PNG válidos."})}
   }
   const pdf=await makePDF(fields,optimized,protocol);
-  if(pdf.length>25*1024*1024)return reply(413,{ok:false,error:"O PDF ficou muito grande. Reduza a quantidade de fotos ou envie em partes."});
+  if(pdf.length+videos.reduce((n,v)=>n+v.buffer.length,0)>18*1024*1024)return reply(413,{ok:false,error:"Os anexos ficaram muito grandes para o e-mail. Reduza a quantidade de fotos ou vídeos."});
   const summary=Object.entries(LABELS).map(([key,label])=>"<p><strong>"+label+":</strong> "+htmlEscape(fields[key]||"Não informado")+"</p>").join("");
-  const result=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.QUOTE_FROM_EMAIL,to:[CONTACT_EMAIL],reply_to:fields.email,subject:"Novo orçamento Mudanças Brasil — "+protocol,html:"<h2>Solicitação de orçamento online</h2><p>Protocolo: "+protocol+"</p>"+summary+"<p>Fotos recebidas: "+photos.length+". O PDF completo está anexo.</p>",attachments:[{filename:"orcamento-mudancas-"+protocol+".pdf",content:pdf.toString("base64")}]})});
-  if(!result.ok){console.error("Falha Resend orçamento",result.status,(await result.text()).slice(0,500));return reply(502,{ok:false,error:"Não foi possível enviar o e-mail. Tente pelo WhatsApp."})}
+  const result=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.QUOTE_FROM_EMAIL,to:[CONTACT_EMAIL],reply_to:fields.email,subject:"Novo orçamento Mudanças Brasil — "+protocol,html:"<h2>Solicitação de orçamento online</h2><p>Protocolo: "+protocol+"</p>"+summary+"<p>Fotos recebidas: "+photos.length+". Vídeos recebidos: "+videos.length+". O PDF e os vídeos estão anexos.</p>",attachments:[{filename:"orcamento-mudancas-"+protocol+".pdf",content:pdf.toString("base64")},...videos.map((v,i)=>({filename:"video-"+(i+1)+"."+({ "video/mp4":"mp4","video/webm":"webm","video/quicktime":"mov"}[v.type]),content:v.buffer.toString("base64")}))]})});
+  if(!result.ok){console.error("Falha Resend orçamento",result.status,(await result.text()).slice(0,500));return reply(502,{ok:false,error:"Não foi possível enviar o e-mail. Tente novamente mais tarde."})}
   reply(200,{ok:true,protocolo:protocol});
  }catch(e){console.error("Erro no orçamento:",e.message);reply(400,{ok:false,error:"Não foi possível processar os dados ou as fotos. Verifique os arquivos."})}
 }
