@@ -1,8 +1,9 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHmac } from "node:crypto";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {getCapture,scanPublic,setCaptureStatus} from "./capture-robot.js";
-const dir=process.env.ADMIN_DATA_DIR||"/data/mudancas-brasil";
+const dir=process.env.ADMIN_DATA_DIR||path.join(path.dirname(fileURLToPath(import.meta.url)),".admin-data");
 const file=path.join(dir,"clientes.json");
 const secret=process.env.ADMIN_SESSION_SECRET||"";
 const username=process.env.ADMIN_USERNAME||"";
@@ -15,7 +16,7 @@ const cookie=req=>(req.headers.cookie||"").split(";").map(x=>x.trim()).find(x=>x
 const safeEqual=(a,b)=>{const aa=Buffer.from(String(a)),bb=Buffer.from(String(b));return aa.length===bb.length&&timingSafeEqual(aa,bb)};
 function auth(req){const token=cookie(req);if(!token)return false;const [id,sig]=token.split(".");if(!id||!sig||!secret)return false;const expected=createHmac("sha256",secret).update(id).digest("hex");return safeEqual(sig,expected)&&sessions.has(id)&&sessions.get(id)>Date.now()}
 async function load(){try{const data=JSON.parse(await readFile(file,"utf8"));return Array.isArray(data)?data:[]}catch(e){if(e.code==="ENOENT")return [];throw e}}
-async function save(data){await mkdir(dir,{recursive:true,mode:0o700});const tmp=file+"."+randomBytes(6).toString("hex");await writeFile(tmp,JSON.stringify(data,null,2),{mode:0o600});await rename(tmp,file)}
+async function save(data){await mkdir(dir,{recursive:true,mode:0o700});const tmp=file+"."+randomBytes(6).toString("hex");try{await writeFile(tmp,JSON.stringify(data,null,2),{mode:0o600});await rename(tmp,file)}catch(e){console.error("Falha de escrita do cadastro:",e.code||e.message);throw new Error("Não foi possível gravar os clientes. Verifique volume persistente e permissão de escrita em ADMIN_DATA_DIR.")}}
 const clean=(v,max=400)=>String(v??"").trim().slice(0,max);
 function validOrigin(req){const origin=req.headers.origin;if(!origin)return false;try{return new URL(origin).host===req.headers.host&&new URL(origin).protocol==="https:" || (process.env.NODE_ENV!=="production"&&new URL(origin).host===req.headers.host)}catch{return false}}
 export async function handleAdmin(req,res,url){
@@ -28,11 +29,11 @@ export async function handleAdmin(req,res,url){
  if(url.pathname==="/api/admin/captacao"&&req.method==="GET")return send(res,200,await getCapture());
  if(url.pathname==="/api/admin/captacao/scan"&&post){try{return send(res,200,await scanPublic())}catch(e){return send(res,502,{error:"Não foi possível consultar as fontes públicas: "+e.message})}}
  if(url.pathname==="/api/admin/captacao/status"&&post){let b;try{b=await body(req);return send(res,200,{registro:await setCaptureStatus(clean(b.id,80),clean(b.status,30))})}catch(e){return send(res,400,{error:e.message})}}
- if(url.pathname==="/api/admin/clientes"&&req.method==="GET")return send(res,200,{clientes:await load()});
+ if(url.pathname==="/api/admin/clientes"&&req.method==="GET"){try{return send(res,200,{clientes:await load()})}catch(e){return send(res,500,{error:"Falha ao ler clientes. Verifique armazenamento."})}}
  if(url.pathname==="/api/admin/clientes"&&post){let b;try{b=await body(req)}catch{return send(res,400,{error:"Dados inválidos"})}
  const allowed=["previsto","fechado","concluido","cancelado"];if(!clean(b.nome,150)||!allowed.includes(b.status))return send(res,400,{error:"Nome e status obrigatórios"});
- const all=await load();const id=clean(b.id,80)||randomBytes(12).toString("hex");const record={id,nome:clean(b.nome,150),telefone:clean(b.telefone,40),origem:clean(b.origem,250),destino:clean(b.destino,250),data:clean(b.data,30),metragem:clean(b.metragem,20),valor:clean(b.valor,30),status:b.status,observacoes:clean(b.observacoes,2000),updatedAt:new Date().toISOString()};
- const index=all.findIndex(x=>x.id===id);if(index>=0)all[index]=record;else all.unshift(record);await save(all);return send(res,200,{cliente:record})}
- if(url.pathname==="/api/admin/excluir"&&post){let b;try{b=await body(req)}catch{return send(res,400,{error:"Dados inválidos"})}const all=await load();await save(all.filter(x=>x.id!==b.id));return send(res,200,{ok:true})}
+ try{const all=await load();const id=clean(b.id,80)||randomBytes(12).toString("hex");const prior=all.find(x=>x.id===id)||{};const record={...prior,id,nome:clean(b.nome,150),telefone:clean(b.telefone,40),origem:clean(b.origem,250),destino:clean(b.destino,250),data:clean(b.data,30),metragem:clean(b.metragem,20),valor:clean(b.valor,30),status:b.status,observacoes:clean(b.observacoes,4000),email:clean(b.email,180),documento:clean(b.documento,30),enderecoOrigem:clean(b.enderecoOrigem,300),enderecoDestino:clean(b.enderecoDestino,300),inventario:clean(b.inventario,6000),servicos:clean(b.servicos,1600),pagamento:clean(b.pagamento,1200),sinal:clean(b.sinal,30),prazoEntrega:clean(b.prazoEntrega,120),seguro:clean(b.seguro,100),updatedAt:new Date().toISOString()};
+ const index=all.findIndex(x=>x.id===id);if(index>=0)all[index]=record;else all.unshift(record);await save(all);return send(res,200,{cliente:record})}catch(e){return send(res,500,{error:e.message})}}
+ if(url.pathname==="/api/admin/excluir"&&post){let b;try{b=await body(req)}catch{return send(res,400,{error:"Dados inválidos"})}try{const all=await load();await save(all.filter(x=>x.id!==b.id));return send(res,200,{ok:true})}catch(e){return send(res,500,{error:e.message})}}
  return send(res,404,{error:"Rota inexistente"});
 }
