@@ -54,10 +54,10 @@ const leadTransport=/\b(mudanca|mudancas|mobiliario|moveis|transportar|transport
 const leadReject=/\b(como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas oferece|oferecemos|nossos servicos)\b/;
 function contactFromPosting(r){
  const txt=String(r.description||"")+" "+String(r.title||"");
- // Apenas contatos fornecidos no próprio pedido público, nunca de perfis privados.
- const email=txt.match(/(?:contato|email|e-mail|or[cç]amento)[^\\n]{0,35}?([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,})/i)?.[1]||"";
- const phone=txt.match(/(?:whats(?:app)?|telefone|tel\\.?|contato)[^0-9]{0,16}((?:\\+?55\\s*)?\\(?\\d{2}\\)?[\\s.-]*9?\\d{4}[\\s.-]*\\d{4})/i)?.[1]||"";
- return {email:esc(email),phone:esc(phone),contactNote:email||phone?"Contato divulgado expressamente no texto do anúncio público; confira a finalidade antes de usar.":"Contato não divulgado no resultado. Abra o anúncio para responder pelo canal autorizado."};
+ // Somente dados explicitamente oferecidos para contato comercial no anuncio.
+ const email=txt.match(/(?:contato|email|e-mail|or[cç]amento)[^\n]{0,35}?([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i)?.[1]||"";
+ const phone=txt.match(/(?:whats(?:app)?|telefone|tel\.?|contato)[^0-9]{0,16}((?:\+?55\s*)?\(?\d{2}\)?[\s.-]*9?\d{4}[\s.-]*\d{4})/i)?.[1]||"";
+ return {email:esc(email),phone:esc(phone),contactNote:email||phone?"Contato divulgado no pedido público; confirme se foi disponibilizado para propostas.":"Contato não divulgado no resultado. Consulte a fonte para responder pelo canal autorizado."};
 }
 function isPublicRequest(item){const t=normalize(item.title+" "+(item.description||""));return leadRequest.test(t)&&leadTransport.test(t)&&!leadReject.test(t);}
 async function scanPublicRequests(){
@@ -66,7 +66,7 @@ async function scanPublicRequests(){
   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
   try{const response=await fetch(u,{signal:ctrl.signal,headers:{"User-Agent":"Mozilla/5.0 (compatible; MudancasBrasilPublicRequests/1.0)"}});if(!response.ok)throw Error("HTTP "+response.status);
    const xml=await response.text();if(!xml.includes("<rss")&&!xml.includes("<item"))throw Error("Fonte RSS indisponível");
-   return [...xml.matchAll(/<item>([\\s\\S]*?)<\\/item>/gi)].slice(0,20).map(m=>({title:esc(tag(m[1],"title")),description:esc(tag(m[1],"description")),link:esc(tag(m[1],"link")),publishedAt:tag(m[1],"pubDate"),searchTerm:q})).filter(x=>validLink(x.link)&&isPublicRequest(x));
+   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,20).map(m=>({title:esc(tag(m[1],"title")),description:esc(tag(m[1],"description")),link:esc(tag(m[1],"link")),publishedAt:tag(m[1],"pubDate"),searchTerm:q})).filter(x=>validLink(x.link)&&isPublicRequest(x));
   }finally{clearTimeout(timer)}
  }));
  const x=await load(),known=new Set(x.requests.map(v=>v.link));let added=0;
