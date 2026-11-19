@@ -49,9 +49,9 @@ const leadQueries=[
  '"preciso de mudança" "Brasília"',
  '"transporte de mobiliário" "solicito"'
 ];
-const leadRequest=/\\b(preciso|procuro|procurando|busco|necessito|solicito|quero contratar|cotacao|orcamento|pedido de frete|frete disponivel|carga disponivel)\\b/;
-const leadTransport=/\\b(mudanca|mudancas|mobiliario|moveis|transportar|transporte|frete|carreto|caminhao|bens)\\b/;
-const leadReject=/\\b(como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas oferece|oferecemos|nossos servicos)\\b/;
+const leadRequest=/\b(preciso|procuro|procurando|busco|necessito|solicito|quero contratar|cotacao|orcamento|pedido de frete|frete disponivel|carga disponivel)\b/;
+const leadTransport=/\b(mudanca|mudancas|mobiliario|moveis|transportar|transporte|frete|carreto|caminhao|bens)\b/;
+const leadReject=/\b(como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas oferece|oferecemos|nossos servicos)\b/;
 function isPublicRequest(item){const t=normalize(item.title+" "+(item.description||""));return leadRequest.test(t)&&leadTransport.test(t)&&!leadReject.test(t);}
 async function scanPublicRequests(){
  const results=await Promise.allSettled(leadQueries.map(async q=>{
@@ -86,8 +86,7 @@ async function fetchFeed(term){const url="https://news.google.com/rss/search?q="
  finally{clearTimeout(timeout)}
 }
 export async function scanPublic(){if(active)return {running:true};active=true;lastError="";let count=0;let leadScan={added:0,checked:0,unavailable:0};
- try{const batches=await Promise.allSettled(terms.map(fetchFeed));const all=batches.filter(x=>x.status==="fulfilled").flatMap(x=>x.value).filter(relevant).map(o=>({...o,...classify(o)}));const errors=batches.filter(x=>x.status==="rejected").map(x=>String(x.reason?.message||x.reason));if(!all.length&&errors.length)throw Error(errors.join("; ").slice(0,400));
- leadScan=await scanPublicRequests().catch(e=>({added:0,checked:0,unavailable:leadQueries.length,error:String(e.message).slice(0,120)}));const x=await load();x.opportunities=x.opportunities.filter(relevant).map(o=>({...o,...classify(o)}));const seen=new Set(x.opportunities.map(i=>i.link));for(const o of all){if(seen.has(o.link))continue;seen.add(o.link);x.opportunities.unshift({...o,id:randomBytes(10).toString("hex"),source:"noticia_publica",discoveredAt:new Date().toISOString(),status:"novo"});count++}
+ try{const batches=await Promise.allSettled(terms.map(fetchFeed));const all=batches.filter(x=>x.status==="fulfilled").flatMap(x=>x.value).filter(relevant).map(o=>({...o,...classify(o)}));const errors=batches.filter(x=>x.status==="rejected").map(x=>String(x.reason?.message||x.reason));leadScan=await scanPublicRequests().catch(e=>({added:0,checked:0,unavailable:leadQueries.length,error:String(e.message).slice(0,120)}));if(!all.length&&errors.length&&leadScan.unavailable===leadQueries.length)throw Error(errors.join("; ").slice(0,400));const x=await load();x.opportunities=x.opportunities.filter(relevant).map(o=>({...o,...classify(o)}));const seen=new Set(x.opportunities.map(i=>i.link));for(const o of all){if(seen.has(o.link))continue;seen.add(o.link);x.opportunities.unshift({...o,id:randomBytes(10).toString("hex"),source:"noticia_publica",discoveredAt:new Date().toISOString(),status:"novo"});count++}
  x.opportunities=x.opportunities.slice(0,1000);await save(x);lastRun=new Date().toISOString();lastError=errors.join("; ").slice(0,400);return {ok:true,added:count,found:all.length,publicRequests:leadScan,partialErrors:errors.length}
  }catch(e){lastError=String(e.message||e).slice(0,400);throw e}finally{active=false;nextRun=new Date(Date.now()+interval).toISOString()}
 }
