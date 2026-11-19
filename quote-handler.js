@@ -2,6 +2,7 @@ import Busboy from "busboy";
 import PDFDocument from "pdfkit";
 import sharp from "sharp";
 import { randomUUID } from "node:crypto";
+import {saveInquiry} from "./capture-robot.js";
 
 const CONTACT_EMAIL = process.env.QUOTE_TO_EMAIL || "mudancasbrasiltransporte@gmail.com";
 const MAX_UPLOAD = 3 * 1024 * 1024;
@@ -89,6 +90,7 @@ export async function handleQuote(req,res){
   const summary=Object.entries(LABELS).map(([key,label])=>"<p><strong>"+label+":</strong> "+htmlEscape(fields[key]||"Não informado")+"</p>").join("");
   const result=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+process.env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.QUOTE_FROM_EMAIL,to:[CONTACT_EMAIL],reply_to:fields.email,subject:"Novo orçamento Mudanças Brasil — "+protocol,html:"<h2>Solicitação de orçamento online</h2><p>Protocolo: "+protocol+"</p>"+summary+"<p>Fotos recebidas: "+photos.length+". Vídeos recebidos: "+videos.length+". O PDF e os vídeos estão anexos.</p>",attachments:[{filename:"orcamento-mudancas-"+protocol+".pdf",content:pdf.toString("base64")},...videos.map((v,i)=>({filename:"video-"+(i+1)+"."+({ "video/mp4":"mp4","video/webm":"webm","video/quicktime":"mov"}[v.type]),content:v.buffer.toString("base64")}))]})});
   if(!result.ok){console.error("Falha Resend orçamento",result.status,(await result.text()).slice(0,500));return reply(502,{ok:false,error:"Não foi possível enviar o e-mail. Tente novamente mais tarde."})}
+  try{await saveInquiry(fields,protocol)}catch(e){console.error("Orçamento enviado, mas falhou o registro no painel:",e.message)}
   reply(200,{ok:true,protocolo:protocol});
  }catch(e){console.error("Erro no orçamento:",e.message);reply(400,{ok:false,error:"Não foi possível processar os dados ou as fotos. Verifique os arquivos."})}
 }
