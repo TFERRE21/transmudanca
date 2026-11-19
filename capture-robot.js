@@ -21,19 +21,19 @@ const esc=s=>String(s??"").trim().slice(0,700);
 const decode=s=>String(s).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,"$1").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n)));
 const tag=(s,t)=>decode(s.match(new RegExp("<"+t+"(?:\\s[^>]*)?>([\\s\\S]*?)<\\/"+t+">","i"))?.[1]||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
 // Seleção conservadora: só serviços reais de transporte, não notícias contendo a palavra "mudança".
-const normalize=v=>String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/\\s+/g," ").trim();
+const normalize=v=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 function classify(item){
  const title=normalize(item.title),search=normalize(item.term),combined=title+" "+search;
  const exclusion=/plano moretti|reforma (politica|tributaria)|mudanca (na|de) (lei|legislacao|governo|governanca|politica|economia|ministerio)|alteracao contratual|alteracao de empresa|junta comercial|passo a passo|especialistas dao dicas|dicas para organizar|como fazer mudanca|transporte publico|tarifa de onibus|rodoviario de passageiros|transito|mobilidade urbana|reajuste|transportes metropolitanos|mudanca climatica|mudanca de horario|mudanca na gestao|mudanca de presidente/;
  if(exclusion.test(title))return null;
- const transport=/\\b(transporte|transportadora|transportar|frete|carreto|remocao|logistica|mudancas residenciais|mudanca residencial|mudancas comerciais|servicos de mudanca|servico de mudanca)\\b/;
- const objects=/\\b(mobiliario|moveis|bens moveis|bens patrimoniais|bens permanentes|equipamentos|acervo|arquivos|residencia|residencial|comercial|sede|escritorio|mudancas|mudanca|carga|mercadorias|objetos)\\b/;
- const service=/\\b(contratacao|contratar|licitacao|pregao|edital|dispensa|cotacao|proposta|orçamento|orcamento|solicita|solicitacao|precisa|procura|servicos|servico|empresa especializada|chamamento|registro de precos|abertura|transporte de mudanca|frete|carreto|transportadora)\\b/;
+ const transport=/\b(transporte|transportadora|transportar|frete|carreto|remocao|logistica|mudancas residenciais|mudanca residencial|mudancas comerciais|servicos de mudanca|servico de mudanca)\b/;
+ const objects=/\b(mobiliario|moveis|bens moveis|bens patrimoniais|bens permanentes|equipamentos|acervo|arquivos|residencia|residencial|comercial|sede|escritorio|mudancas|mudanca|carga|mercadorias|objetos)\b/;
+ const service=/\b(contratacao|contratar|licitacao|pregao|edital|dispensa|cotacao|proposta|orçamento|orcamento|solicita|solicitacao|precisa|procura|servicos|servico|empresa especializada|chamamento|registro de precos|abertura|transporte de mudanca|frete|carreto|transportadora)\b/;
  // Os três sinais devem estar no título: não aceitar só porque a busca usou as palavras.
  if(!transport.test(title)||!objects.test(title)||!service.test(title))return null;
  // Uma notícia sobre "licitação de mobiliário" sem transporte não passa no teste acima.
- const bid=/\\b(licitacao|pregao|edital|dispensa|contratacao|registro de precos|cotacao publica|chamamento)\\b/.test(title);
- const category=bid?"licitacao":/\\b(equipamentos|arquivos|acervo|bens patrimoniais|bens permanentes)\\b/.test(title)?"bens_e_equipamentos":/\\b(residencia|residencial|mudanca residencial|frete|carreto)\\b/.test(title)?"mudanca_residencial":"transporte_mobiliario";
+ const bid=/\b(licitacao|pregao|edital|dispensa|contratacao|registro de precos|cotacao publica|chamamento)\b/.test(title);
+ const category=bid?"licitacao":/\b(equipamentos|arquivos|acervo|bens patrimoniais|bens permanentes)\b/.test(title)?"bens_e_equipamentos":/\b(residencia|residencial|mudanca residencial|frete|carreto)\b/.test(title)?"mudanca_residencial":"transporte_mobiliario";
  return {category,reason:"Serviço de transporte de bens/móveis identificado no título; confirmar detalhes na fonte."};
 }
 const recent=item=>{const d=Date.parse(item.publishedAt);return !Number.isFinite(d)||(d>=Date.now()-180*86400000&&d<=Date.now()+2*86400000)};
