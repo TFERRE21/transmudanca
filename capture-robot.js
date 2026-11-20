@@ -1,6 +1,8 @@
 import {readFile,writeFile,mkdir,rename} from "node:fs/promises";
 import {randomBytes} from "node:crypto";
 import path from "node:path";
+import {existsSync} from "node:fs";
+import {spawnSync} from "node:child_process";
 
 const dir=process.env.ADMIN_DATA_DIR||"/data/mudancas-brasil";
 const storage=path.join(dir,"captacao.json");
@@ -105,35 +107,54 @@ function parseMudarPublic(html){
  }
  return out;
 }
+function summarizeBrowserFailure(error,executable){
+ const raw=String(error?.message||error||"Erro desconhecido");
+ const missing=[...raw.matchAll(/(?:lib[\w+.-]+\.so(?:\.\d+)*|error while loading shared libraries|Host system is missing dependencies|No usable sandbox|Illegal instruction|SIG(?:KILL|SEGV)|OOM|out of memory)/gi)].map(m=>m[0]);
+ let ldd="";
+ if(executable&&existsSync(executable)){
+  try{const result=spawnSync("ldd",[executable],{encoding:"utf8",timeout:6000,maxBuffer:200000});ldd=(result.stdout||"").split("\n").filter(line=>line.includes("not found")).map(line=>line.trim()).slice(0,8).join("; ")}catch{}
+ }
+ if(ldd)return "Chromium instalado, mas faltam bibliotecas Linux: "+ldd+". Instale dependências do sistema no container.";
+ if(missing.length)return "Chromium não iniciou. Diagnóstico: "+[...new Set(missing)].join(", ")+". "+raw.slice(-400);
+ if(/Target page, context or browser has been closed|browserType\.launch/i.test(raw))return "Chromium encerrou na inicialização. Verifique bibliotecas Linux, memória/limites do container e sandbox. Detalhes: "+raw.slice(-600);
+ return "Chromium não iniciou: "+raw.slice(-600);
+}
 async function renderMudarWithBrowser(){
- // Fallback para uma página pública que monta os cartões via JavaScript.
- // Não usa login, cookies de terceiros ou endpoints não documentados.
+ // Fallback limitado à página pública; não utiliza sessões ou conteúdo protegido.
  let chromium;
  if(!process.env.MUDAR_CHROMIUM_PATH)process.env.PLAYWRIGHT_BROWSERS_PATH="0";
  try{({chromium}=await import("playwright-core"))}
- catch{throw Error("Leitor com navegador indisponível: dependência playwright-core não instalada.")}
- const options={headless:true,timeout:15000,args:["--disable-dev-shm-usage","--no-sandbox"]};
- if(process.env.MUDAR_CHROMIUM_PATH)options.executablePath=process.env.MUDAR_CHROMIUM_PATH;
- let browser;
- try{
-  browser=await chromium.launch(options);
-  const context=await browser.newContext({locale:"pt-BR",viewport:{width:1280,height:900}});
-  const page=await context.newPage();
-  await page.route("**/*",route=>{
-   if(["image","font","media"].includes(route.request().resourceType()))return route.abort();
-   return route.continue();
-  });
-  const response=await page.goto(MUDAR_URL,{waitUntil:"domcontentloaded",timeout:20000});
-  if(!response||response.status()>=400)throw Error("Navegador recebeu HTTP "+(response?.status()??"desconhecido"));
-  try{await page.waitForFunction(()=>/\b\d+(?:[.,]\d+)?\s*m³/i.test(document.body?.innerText||""),null,{timeout:15000})}catch{}
-  const html=await page.content();
-  const items=parseMudarPublic(html);
-  if(!items.length)throw Error("O navegador abriu a página, mas nenhum pedido público foi identificado.");
-  return items;
- }catch(e){throw Error("Navegador automático: "+String(e.message||e).slice(0,170))}
- finally{if(browser)await browser.close().catch(()=>{})}
+ catch{throw Error("Dependência playwright-core não instalada.")}
+ const candidates=[
+  process.env.MUDAR_CHROMIUM_PATH,
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
+  "/usr/bin/google-chrome",
+  "/usr/bin/google-chrome-stable",
+  null
+ ].filter((v,i,a)=>v===null||Boolean(v)&&existsSync(v)&&a.indexOf(v)===i);
+ let errors=[];
+ for(const candidate of candidates){
+  let browser;
+  try{
+   const options={headless:true,timeout:12000,args:["--no-sandbox","--disable-dev-shm-usage","--disable-gpu","--no-first-run","--no-default-browser-check","--disable-extensions"]};
+   if(candidate)options.executablePath=candidate;
+   browser=await chromium.launch(options);
+   const context=await browser.newContext({locale:"pt-BR",viewport:{width:1280,height:850}});
+   const page=await context.newPage();
+   await page.route("**/*",route=>["image","font","media"].includes(route.request().resourceType())?route.abort():route.continue());
+   const response=await page.goto(MUDAR_URL,{waitUntil:"domcontentloaded",timeout:20000});
+   if(!response||response.status()>=400)throw Error("Navegador recebeu HTTP "+(response?.status()??"desconhecido"));
+   try{await page.waitForFunction(()=>/\b\d+(?:[.,]\d+)?\s*m³/i.test(document.body?.innerText||""),null,{timeout:12000})}catch{}
+   const items=parseMudarPublic(await page.content());
+   if(!items.length)throw Error("Navegador abriu a página, mas os cartões não foram encontrados no conteúdo público renderizado.");
+   return items;
+  }catch(e){
+   errors.push(summarizeBrowserFailure(e,candidate||chromium.executablePath()));
+  }finally{if(browser)await browser.close().catch(()=>{})}
+ }
+ throw Error(errors.join(" | ").slice(0,1300));
 }
-
 async function scanMudar(){
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),16000);
  try{
@@ -158,7 +179,7 @@ async function scanMudar(){
     return {...v,key,id:old?.id||randomBytes(10).toString("hex"),status:old?.status||"novo",source:"mudar_publico",firstSeen:old?.firstSeen||new Date().toISOString()}
   });
   await save(x);mudarLastRun=new Date().toISOString();mudarLastError="";return {added,total:x.mudar.length};
- }catch(e){mudarLastError=String(e.message||e).slice(0,250);return {added:0,error:mudarLastError}}finally{clearTimeout(timer)}
+ }catch(e){mudarLastError=String(e.message||e).slice(0,950);return {added:0,error:mudarLastError}}finally{clearTimeout(timer)}
 }
 
 async function load(){try{const x=JSON.parse(await readFile(storage,"utf8"));return {opportunities:Array.isArray(x.opportunities)?x.opportunities:[],inquiries:Array.isArray(x.inquiries)?x.inquiries:[],requests:Array.isArray(x.requests)?x.requests:[],mudar:Array.isArray(x.mudar)?x.mudar:[]}}catch(e){if(e.code==="ENOENT")return {opportunities:[],inquiries:[],requests:[],mudar:[]};throw e}}
