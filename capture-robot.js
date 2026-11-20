@@ -1,7 +1,7 @@
 import {readFile,writeFile,mkdir,rename} from "node:fs/promises";
 import {randomBytes} from "node:crypto";
 import path from "node:path";
-import {existsSync} from "node:fs";
+import {existsSync,readdirSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 
 const dir=process.env.ADMIN_DATA_DIR||"/data/mudancas-brasil";
@@ -125,8 +125,11 @@ async function renderMudarWithBrowser(){
  if(!process.env.MUDAR_CHROMIUM_PATH)process.env.PLAYWRIGHT_BROWSERS_PATH="0";
  try{({chromium}=await import("playwright-core"))}
  catch{throw Error("Dependência playwright-core não instalada.")}
+ const browserDir=path.join(process.cwd(),"node_modules","playwright-core",".local-browsers");
+ const headlessShells=existsSync(browserDir)?readdirSync(browserDir).filter(name=>name.startsWith("chromium_headless_shell-")).map(name=>path.join(browserDir,name,"chrome-headless-shell-linux64","chrome-headless-shell")).filter(existsSync):[];
  const candidates=[
   process.env.MUDAR_CHROMIUM_PATH,
+  ...headlessShells,
   "/usr/bin/chromium",
   "/usr/bin/chromium-browser",
   "/usr/bin/google-chrome",
@@ -150,7 +153,7 @@ async function renderMudarWithBrowser(){
    if(!items.length)throw Error("Navegador abriu a página, mas os cartões não foram encontrados no conteúdo público renderizado.");
    return items;
   }catch(e){
-   errors.push(summarizeBrowserFailure(e,candidate||chromium.executablePath()));
+   errors.push(summarizeBrowserFailure(e,candidate||headlessShells[0]||chromium.executablePath()));
   }finally{if(browser)await browser.close().catch(()=>{})}
  }
  throw Error(errors.join(" | ").slice(0,1300));
