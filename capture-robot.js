@@ -172,14 +172,14 @@ async function scanMudar(){
    }
    if(!allow)throw Error("O site restringe consulta automatizada da lista");
   }
-  const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
+  const response=await fetch(MUDAR_URL,{signal:ctrl.signal,cache:"no-store",headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html","Cache-Control":"no-cache"}});
   if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
   const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
   let incoming=parseMudarPublic(html);if(!incoming.length){try{incoming=await renderMudarWithBrowser()}catch(browserError){throw Error("HTML recebido sem pedidos (HTTP "+response.status+", "+Buffer.byteLength(html)+" bytes). "+browserError.message+". Instale Chromium na VPS ou solicite um feed/API pública autorizada à MUDAR.")}}
-  const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
+  const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();const checkedAt=new Date().toISOString();
   x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
     const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
-    return {...v,key,id:old?.id||randomBytes(10).toString("hex"),status:old?.status||"novo",source:"mudar_publico",firstSeen:old?.firstSeen||new Date().toISOString()}
+    return {...v,key,id:old?.id||randomBytes(10).toString("hex"),status:old?.status||"novo",source:"mudar_publico",firstSeen:old?.firstSeen||checkedAt,lastSeenAt:checkedAt}
   });
   await save(x);mudarLastRun=new Date().toISOString();mudarLastError="";return {added,total:x.mudar.length};
  }catch(e){mudarLastError=String(e.message||e).slice(0,950);return {added:0,error:mudarLastError}}finally{clearTimeout(timer)}
