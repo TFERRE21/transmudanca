@@ -85,10 +85,26 @@ function capRender(){const inquiries=capFiltered(capData.inquiries),opportunitie
 
 const ufsMudar="AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 for(const id of ["mudarOrigin","mudarDest"]){$(id).insertAdjacentHTML("beforeend",ufsMudar.map(v=>'<option value="'+v+'">'+v+'</option>').join(""))}
+const mudarMonths={janeiro:0,fevereiro:1,marco:2,abril:3,maio:4,junho:5,julho:6,agosto:7,setembro:8,outubro:9,novembro:10,dezembro:11};
+function mudarDateInfo(x){
+ const value=String(x.date||"").trim();
+ const m=value.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().match(/^(\d{1,2})\s+de\s+([a-z]+)(?:\s+de\s+(\d{4}))?/);
+ if(!m||mudarMonths[m[2]]===undefined)return {ts:Infinity,unknown:true,expired:false};
+ const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+ const year=m[3]?Number(m[3]):now.getFullYear(),day=Number(m[1]),month=mudarMonths[m[2]];
+ let date=new Date(year,month,day);if(date.getMonth()!==month||date.getDate()!==day)return {ts:Infinity,unknown:true,expired:false};
+ if(!m[3]&&date<today)date=new Date(year+1,month,day);
+ return {ts:date.getTime(),unknown:!m[3],expired:!!m[3]&&date<today};
+}
+function mudarIsDF(x){
+ const origin=String(x.origin||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(),destination=String(x.destination||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ return x.originUF==="DF"||x.destinationUF==="DF"||/\b(?:brasilia|aguas claras|taguatinga|ceilandia|samambaia|brazlandia|sobradinho|gama|planaltina|guara|vicente pires|recanto das emas|santa maria)\/df\b/i.test(origin+" "+destination);
+}
 function renderMudar(){const entries=capData.mudar||[],o=$("mudarOrigin").value,d=$("mudarDest").value,q=$("mudarSearch").value.toLowerCase().trim(),st=$("mudarStatusFilter").value;
- const filtered=entries.filter(x=>(!o||x.originUF===o)&&(!d||x.destinationUF===d)&&(!q||[x.origin,x.destination].some(v=>String(v).toLowerCase().includes(q)))&&(!st||x.status===st));
- $("mudarCount").textContent="("+filtered.length+" de "+entries.length+")";
- $("mudarRows").innerHTML=filtered.length?filtered.slice(0,300).map(x=>'<tr><td>'+escape(x.origin)+'</td><td>'+escape(x.destination)+'</td><td>'+escape(x.date||"A confirmar")+'</td><td>'+escape(x.volume||"Não informado")+' m³</td><td>'+escape((x.services||[]).join(", ")||"Não informado")+'</td><td><a href="https://mudarbr.com.br/movinglist" target="_blank" rel="noopener noreferrer">Ver pedido</a></td><td>'+capStatusSelect(x)+'</td></tr>').join(''):'<tr><td colspan="7">Nenhum pedido corresponde aos filtros ou a fonte ainda não permitiu sincronização.</td></tr>';
+ const filtered=entries.filter(x=>(!o||x.originUF===o)&&(!d||x.destinationUF===d)&&(!q||[x.origin,x.destination].some(v=>String(v).toLowerCase().includes(q)))&&(!st||x.status===st)&&!mudarDateInfo(x).expired)
+ .sort((a,b)=>Number(mudarIsDF(b))-Number(mudarIsDF(a))||mudarDateInfo(a).ts-mudarDateInfo(b).ts||String(b.firstSeen||"").localeCompare(String(a.firstSeen||"")));
+ $("mudarCount").textContent="("+filtered.length+" de "+entries.length+"; Brasília/DF em destaque)";
+ $("mudarRows").innerHTML=filtered.length?filtered.slice(0,300).map(x=>{const info=mudarDateInfo(x);return '<tr'+(mudarIsDF(x)?' style="background:#eef9f1"':'')+'><td>'+escape(x.origin)+'</td><td>'+escape(x.destination)+(mudarIsDF(x)?'<br><strong style="color:#146736">★ Brasília/DF</strong>':'')+'</td><td>'+escape(x.date||"A confirmar")+(info.unknown?'<br><small title="A fonte não informa o ano da mudança">Ano não informado</small>':'')+'</td><td>'+escape(x.volume||"Não informado")+' m³</td><td>'+escape((x.services||[]).join(", ")||"Não informado")+'</td><td><a href="https://mudarbr.com.br/movinglist" target="_blank" rel="noopener noreferrer">Ver pedido</a></td><td>'+capStatusSelect(x)+'</td></tr>'}).join(""):'<tr><td colspan="7">Nenhum pedido corresponde aos filtros ou a fonte ainda não permitiu sincronização.</td></tr>';
 }
 for(const id of ["mudarOrigin","mudarDest","mudarStatusFilter","mudarSearch"]){$(id).addEventListener(id==="mudarSearch"?"input":"change",renderMudar)}
 $("mudarScanNow").onclick=async()=>{const button=$("mudarScanNow");button.disabled=true;$("mudarSyncStatus").textContent="Consultando pedidos públicos...";try{const result=await api("/api/admin/captacao/scan","POST",{});await refreshCapture();if(result.mudar?.error)notice("Não foi possível sincronizar MUDAR: "+result.mudar.error);else notice("Consulta concluída: "+(result.mudar?.total||0)+" pedidos públicos disponíveis na leitura.")}catch(e){notice("Falha na consulta: "+e.message)}finally{button.disabled=false}};
