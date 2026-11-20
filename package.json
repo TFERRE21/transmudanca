@@ -5,7 +5,8 @@
   "description": "Site institucional Mudanças Brasil — mudanças nacionais e interestaduais",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check:browser": "node -e \"import('playwright-core').then(async ({chromium}) => {let b; try {b=await chromium.launch({headless:true}); console.log('Chromium OK')} finally {await b?.close()}}).catch(e=>{console.error(e.message);process.exitCode=1})\""
   },
   "engines": {
     "node": ">=20"
@@ -13,6 +14,7 @@
   "dependencies": {
     "busboy": "^1.6.0",
     "pdfkit": "^0.17.2",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "playwright-core": "^1.55.0"
   }
 }
