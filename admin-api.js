@@ -1,7 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHmac } from "node:crypto";
 import { readFile, writeFile, mkdir, rename } from "node:fs/promises";
 import path from "node:path";
-import {getCapture,scanPublic,setCaptureStatus} from "./capture-robot.js";
+import {getCapture,scanPublic,scanContactLeads,setCaptureStatus} from "./capture-robot.js";
 const dir=process.env.ADMIN_DATA_DIR||"/data/mudancas-brasil";
 const file=path.join(dir,"clientes.json");
 const secret=process.env.ADMIN_SESSION_SECRET||"";
@@ -26,6 +26,7 @@ export async function handleAdmin(req,res,url){
  if(url.pathname==="/api/admin/logout"&&post){const id=cookie(req)?.split(".")[0];sessions.delete(id);return send(res,200,{ok:true},{"Set-Cookie":"mb_session=; HttpOnly; Secure; SameSite=Strict; Path=/api/admin; Max-Age=0"})}
  if(url.pathname==="/api/admin/me"&&req.method==="GET")return send(res,200,{ok:true,user:username});
  if(url.pathname==="/api/admin/captacao"&&req.method==="GET")return send(res,200,await getCapture());
+ if(url.pathname==="/api/admin/captacao/leads-scan"&&post){try{return send(res,200,await scanContactLeads())}catch(e){return send(res,502,{error:"Falha na pesquisa de contatos: "+e.message})}}
  if(url.pathname==="/api/admin/captacao/scan"&&post){try{return send(res,200,await scanPublic())}catch(e){return send(res,502,{error:"Não foi possível consultar as fontes públicas: "+e.message})}}
  if(url.pathname==="/api/admin/captacao/status"&&post){let b;try{b=await body(req);return send(res,200,{registro:await setCaptureStatus(clean(b.id,80),clean(b.status,30))})}catch(e){return send(res,400,{error:e.message})}}
  if(url.pathname==="/api/admin/clientes"&&req.method==="GET"){try{return send(res,200,{clientes:await load()})}catch(e){return send(res,500,{error:"Falha ao ler clientes. Verifique armazenamento."})}}
