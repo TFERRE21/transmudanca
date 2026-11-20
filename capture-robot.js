@@ -105,6 +105,34 @@ function parseMudarPublic(html){
  }
  return out;
 }
+async function renderMudarWithBrowser(){
+ // Fallback para uma página pública que monta os cartões via JavaScript.
+ // Não usa login, cookies de terceiros ou endpoints não documentados.
+ let chromium;
+ try{({chromium}=await import("playwright-core"))}
+ catch{throw Error("Leitor com navegador indisponível: dependência playwright-core não instalada.")}
+ const options={headless:true,timeout:15000,args:["--disable-dev-shm-usage","--no-sandbox"]};
+ if(process.env.MUDAR_CHROMIUM_PATH)options.executablePath=process.env.MUDAR_CHROMIUM_PATH;
+ let browser;
+ try{
+  browser=await chromium.launch(options);
+  const context=await browser.newContext({locale:"pt-BR",viewport:{width:1280,height:900}});
+  const page=await context.newPage();
+  await page.route("**/*",route=>{
+   if(["image","font","media"].includes(route.request().resourceType()))return route.abort();
+   return route.continue();
+  });
+  const response=await page.goto(MUDAR_URL,{waitUntil:"domcontentloaded",timeout:20000});
+  if(!response||response.status()>=400)throw Error("Navegador recebeu HTTP "+(response?.status()??"desconhecido"));
+  try{await page.waitForFunction(()=>/\b\d+(?:[.,]\d+)?\s*m³/i.test(document.body?.innerText||""),null,{timeout:15000})}catch{}
+  const html=await page.content();
+  const items=parseMudarPublic(html);
+  if(!items.length)throw Error("O navegador abriu a página, mas nenhum pedido público foi identificado.");
+  return items;
+ }catch(e){throw Error("Navegador automático: "+String(e.message||e).slice(0,170))}
+ finally{if(browser)await browser.close().catch(()=>{})}
+}
+
 async function scanMudar(){
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),16000);
  try{
@@ -122,7 +150,7 @@ async function scanMudar(){
   const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
   if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
   const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
-  const incoming=parseMudarPublic(html);if(!incoming.length){const plain=html.replace(/<[^>]+>/g," ").replace(/\s+/g," ");const title=decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||"").trim().slice(0,90);const count=(html.match(/<script\b/gi)||[]).length;const routes=(plain.match(/\/(?:DF|GO|MG|SP|RJ|BA|ES|PR|SC|RS|MT|MS)\b/g)||[]).length;const volumes=(plain.match(/\d+(?:[.,]\d+)?\s*m³/gi)||[]).length;throw Error("Não foi possível extrair pedidos públicos. Diagnóstico: HTTP "+response.status+", "+Buffer.byteLength(html)+" bytes, "+count+" scripts, "+routes+" rotas identificáveis, "+volumes+" volumes, título: "+title+". Acesso via navegador ou fonte oficial pode ser necessário.");}
+  let incoming=parseMudarPublic(html);if(!incoming.length){try{incoming=await renderMudarWithBrowser()}catch(browserError){throw Error("HTML recebido sem pedidos (HTTP "+response.status+", "+Buffer.byteLength(html)+" bytes). "+browserError.message+". Instale Chromium na VPS ou solicite um feed/API pública autorizada à MUDAR.")}}
   const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
   x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
     const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
