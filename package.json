@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "check:browser": "node -e \"import('playwright-core').then(async ({chromium}) => {let b; try {b=await chromium.launch({headless:true}); console.log('Chromium OK')} finally {await b?.close()}}).catch(e=>{console.error(e.message);process.exitCode=1})\""
+    "check:browser": "node -e \"process.env.PLAYWRIGHT_BROWSERS_PATH='0'; import('playwright-core').then(async ({chromium}) => {let b;try{b=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']}); console.log('Chromium OK')}finally{await b?.close()}}).catch(e=>{console.error(e.message);process.exitCode=1})\"",
+    "postinstall": "node scripts/install-browser.cjs"
   },
   "engines": {
     "node": ">=20"
