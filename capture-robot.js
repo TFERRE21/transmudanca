@@ -81,36 +81,26 @@ async function scanPublicRequests(){
 const MUDAR_URL="https://mudarbr.com.br/movinglist";
 let mudarLastRun=null,mudarLastError="";
 function parseMudarPublic(html){
- // Lê HTML público e dados de hidratação visíveis, sem acessar área autenticada.
- const original=String(html);
- const content=decode(original.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ")
-  .replace(/<\/(?:div|p|li|article|section|h[1-6]|button|span)>/gi,"\n")
-  .replace(/<br\s*\/?>/gi,"\n").replace(/<[^>]+>/g," "));
- // Várias aplicações transmitem os cartões em scripts JSON escapados.
- const scripts=[...original.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).join(" ");
- const decodedScripts=scripts.replace(/\\u002[fF]/g,"/").replace(/\\u003[cC]/g,"<")
-   .replace(/\\u003[eE]/g,">").replace(/\\u00[bB]3/g,"³").replace(/\\n/g,"\n")
-   .replace(/\\"/g,'"').replace(/\\\//g,"/").replace(/\\t/g," ").replace(/\\r/g," ");
- const sources=[content,decodedScripts];
- const UFS="AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO";
- const pattern=new RegExp("([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+UFS+")\\s+([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+UFS+")","gu");
- const datePattern=/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i;
- const volumePattern=/(\d{1,3}(?:[.,]\d{1,2})?)\s*m(?:³|3)(?!\d)/i;
+ const raw=String(html);
+ const stripped=decode(raw.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<\/(?:div|p|li|section|article|span|a|h[1-6])>/gi,"\n").replace(/<[^>]*>/g," "));
+ const scripts=[...raw.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join(" ").replace(/\\u002[fF]/g,"/").replace(/\\n/g,"\n").replace(/\\"/g,'"');
+ const pattern=/([\p{L}][\p{L} .'-]{1,65}?)\s*\/\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/gu;
  const out=[],seen=new Set();
- for(const source of sources){
+ for(const source of [stripped,scripts]){
   const text=source.replace(/[ \t]+/g," ").replace(/\n\s*\n+/g,"\n");
   const matches=[...text.matchAll(pattern)];
-  for(let i=0;i<matches.length&&out.length<300;i++){
-   const m=matches[i];
-   const after=text.slice(m.index+m[0].length,Math.min(matches[i+1]?.index??text.length,m.index+m[0].length+380));
-   const date=after.match(datePattern),vol=after.match(volumePattern);
-   if(!date&&!vol)continue;
+  for(let i=0;i+1<matches.length&&out.length<300;i++){
+   const m=matches[i],n=matches[i+1];if(n.index-m.index>180)continue;
+   const detail=text.slice(n.index+n[0].length,Math.min(matches[i+2]?.index??text.length,n.index+n[0].length+300));
+   const date=detail.match(/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i);
+   const vol=detail.match(/(\d{1,3}(?:[.,]\d{1,2})?)\s*m(?:³|3)/i);if(!date&&!vol)continue;
+   const city1=m[1].split(/\n/).at(-1).trim(),city2=n[1].split(/\n/).at(-1).trim();
+   if(!city1||!city2||/compartilhar|interessadas|ajudante|embalagem|montagem|flexivel/i.test(city1+" "+city2))continue;
    if(vol&&Number(vol[1].replace(",","."))>300)continue;
-   const city1=m[1].split(/[\r\n]/).at(-1).trim().replace(/^.*(?:Compartilhar|Compartilhada|Ajudante|Embalagem|Montagem)\s+/i,"").trim();
-   const city2=m[3].trim();if(!city1||!city2||city1.length>65||city2.length>65)continue;
-   const origin=city1+"/"+m[2],destination=city2+"/"+m[4],day=date?.[0]||"",volume=vol?.[1].replace(",",".")||"";
-   const key=normalize([origin,destination,volume].join("|"));if(seen.has(key)){const old=out.find(v=>normalize([v.origin,v.destination,v.volume].join("|"))===key);if(old&&!old.date&&day)old.date=day;continue}seen.add(key);
-   out.push({origin,destination,originUF:m[2],destinationUF:m[4],date:day,volume,services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(after)),link:MUDAR_URL});
+   const origin=city1+"/"+m[2],destination=city2+"/"+n[2],day=date?.[0]||"",volume=vol?.[1].replace(",",".")||"";
+   const key=normalize([origin,destination,day,volume].join("|"));if(seen.has(key))continue;seen.add(key);
+   out.push({origin,destination,originUF:m[2],destinationUF:n[2],date:day,volume,services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(detail)),link:MUDAR_URL});
+   i++;
   }
  }
  return out;
@@ -132,7 +122,7 @@ async function scanMudar(){
   const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
   if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
   const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
-  const incoming=parseMudarPublic(html);if(!incoming.length){const scripts=(html.match(/<script\\b/gi)||[]).length;throw Error("A página respondeu, mas não forneceu cartões legíveis ao servidor ("+html.length+" caracteres, "+scripts+" scripts). Pode exigir renderização no navegador ou acesso oficial.");}
+  const incoming=parseMudarPublic(html);if(!incoming.length){const plain=html.replace(/<[^>]+>/g," ").replace(/\s+/g," ");const title=decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||"").trim().slice(0,90);const count=(html.match(/<script\b/gi)||[]).length;const routes=(plain.match(/\/(?:DF|GO|MG|SP|RJ|BA|ES|PR|SC|RS|MT|MS)\b/g)||[]).length;const volumes=(plain.match(/\d+(?:[.,]\d+)?\s*m³/gi)||[]).length;throw Error("Não foi possível extrair pedidos públicos. Diagnóstico: HTTP "+response.status+", "+Buffer.byteLength(html)+" bytes, "+count+" scripts, "+routes+" rotas identificáveis, "+volumes+" volumes, título: "+title+". Acesso via navegador ou fonte oficial pode ser necessário.");}
   const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
   x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
     const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
