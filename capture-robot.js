@@ -81,23 +81,37 @@ async function scanPublicRequests(){
 const MUDAR_URL="https://mudarbr.com.br/movinglist";
 let mudarLastRun=null,mudarLastError="";
 function parseMudarPublic(html){
- const raw=String(html).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<\/(?:div|p|li|article|section|h[1-6]|button)>/gi,"\n").replace(/<br\s*\/?>/gi,"\n").replace(/<[^>]+>/g," ");
- const text=decode(raw).replace(/&nbsp;|&#160;/gi," ").replace(/[ \t]+/g," ").replace(/\n\s*\n/g,"\n");
- const states="AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO";
- const route=new RegExp("([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+states+")\\s+([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+states+")","gu");
+ // Lê HTML público e dados de hidratação visíveis, sem acessar área autenticada.
+ const original=String(html);
+ const content=decode(original.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ")
+  .replace(/<\/(?:div|p|li|article|section|h[1-6]|button|span)>/gi,"\n")
+  .replace(/<br\s*\/?>/gi,"\n").replace(/<[^>]+>/g," "));
+ // Várias aplicações transmitem os cartões em scripts JSON escapados.
+ const scripts=[...original.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(x=>x[1]).join(" ");
+ const decodedScripts=scripts.replace(/\\u002[fF]/g,"/").replace(/\\u003[cC]/g,"<")
+   .replace(/\\u003[eE]/g,">").replace(/\\u00[bB]3/g,"³").replace(/\\n/g,"\n")
+   .replace(/\\"/g,'"').replace(/\\\//g,"/").replace(/\\t/g," ").replace(/\\r/g," ");
+ const sources=[content,decodedScripts];
+ const UFS="AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO";
+ const pattern=new RegExp("([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+UFS+")\\s+([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+UFS+")","gu");
  const datePattern=/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i;
- const volumePattern=/(\d{1,3}(?:[.,]\d{1,2})?)\s*m(?:³|3)/i;
- const matches=[...text.matchAll(route)],out=[];
- for(let i=0;i<matches.length&&out.length<300;i++){
-  const m=matches[i],end=matches[i+1]?.index??text.length;
-  const detail=text.slice(m.index+m[0].length,Math.min(end,m.index+m[0].length+320));
-  const date=detail.match(datePattern),vol=detail.match(volumePattern);
-  if(!date&&!vol)continue;
-  if(vol&&Number(vol[1].replace(",","."))>100)continue;
-  let first=m[1].split(/\n/).at(-1).trim();
-  first=first.replace(/^.*(?:Compartilhar|Compartilhada|Ajudante|Embalagem|Montagem)\s+/i,"").trim();
-  if(!first||first.length>65)continue;
-  out.push({origin:first+"/"+m[2],destination:m[3].trim()+"/"+m[4],originUF:m[2],destinationUF:m[4],date:date?.[0]||"",volume:vol?.[1].replace(",",".")||"",services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(detail)),link:MUDAR_URL});
+ const volumePattern=/(\d{1,3}(?:[.,]\d{1,2})?)\s*m(?:³|3)(?!\d)/i;
+ const out=[],seen=new Set();
+ for(const source of sources){
+  const text=source.replace(/[ \t]+/g," ").replace(/\n\s*\n+/g,"\n");
+  const matches=[...text.matchAll(pattern)];
+  for(let i=0;i<matches.length&&out.length<300;i++){
+   const m=matches[i];
+   const after=text.slice(m.index+m[0].length,Math.min(matches[i+1]?.index??text.length,m.index+m[0].length+380));
+   const date=after.match(datePattern),vol=after.match(volumePattern);
+   if(!date&&!vol)continue;
+   if(vol&&Number(vol[1].replace(",","."))>300)continue;
+   const city1=m[1].split(/[\r\n]/).at(-1).trim().replace(/^.*(?:Compartilhar|Compartilhada|Ajudante|Embalagem|Montagem)\s+/i,"").trim();
+   const city2=m[3].trim();if(!city1||!city2||city1.length>65||city2.length>65)continue;
+   const origin=city1+"/"+m[2],destination=city2+"/"+m[4],day=date?.[0]||"",volume=vol?.[1].replace(",",".")||"";
+   const key=normalize([origin,destination,day,volume].join("|"));if(seen.has(key))continue;seen.add(key);
+   out.push({origin,destination,originUF:m[2],destinationUF:m[4],date:day,volume,services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(after)),link:MUDAR_URL});
+  }
  }
  return out;
 }
@@ -118,7 +132,7 @@ async function scanMudar(){
   const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
   if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
   const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
-  const incoming=parseMudarPublic(html);if(!incoming.length)throw Error("Não foram encontrados pedidos no HTML recebido. A lista pode ser carregada por JavaScript no navegador ou o formato mudou; requer integração pública autorizada.");
+  const incoming=parseMudarPublic(html);if(!incoming.length){const scripts=(html.match(/<script\\b/gi)||[]).length;throw Error("A página respondeu, mas não forneceu cartões legíveis ao servidor ("+html.length+" caracteres, "+scripts+" scripts). Pode exigir renderização no navegador ou acesso oficial.");}
   const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
   x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
     const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
