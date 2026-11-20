@@ -72,7 +72,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(xml);
     }
     if (pathname === "/") pathname = "/index.html";
-    if (pathname === "/admin-api.js" || pathname === "/server.js" || pathname === "/quote-handler.js" || pathname === "/.env" || pathname === "/.env.example" || pathname === "/package.json" || pathname.includes("/.")) {
+    if (pathname.startsWith("/scripts/") || pathname === "/capture-robot.js" || pathname === "/admin-api.js" || pathname === "/server.js" || pathname === "/quote-handler.js" || pathname === "/.env" || pathname === "/.env.example" || pathname === "/package.json" || pathname.includes("/.")) {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("Not Found");
     }
 
