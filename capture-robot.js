@@ -51,27 +51,40 @@ const leadQueries=[
  '"preciso de mudança" "Brasília"',
  '"transporte de mobiliário" "solicito"'
 ];
-const leadRequest=/\b(preciso|procuro|procurando|busco|necessito|solicito|quero contratar|cotacao|orcamento|pedido de frete|frete disponivel|carga disponivel)\b/;
-const leadTransport=/\b(mudanca|mudancas|mobiliario|moveis|transportar|transporte|frete|carreto|caminhao|bens)\b/;
-const leadReject=/\b(como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas oferece|oferecemos|nossos servicos|indenizacao|avaria|sofá rasgado|sofa rasgado|quebrou|danificou|reclama|recusa a pagar|indenizar)\b/;
+// Aceita somente uma solicitação explícita feita por quem precisa contratar.
+const leadRequest=/\b(?:preciso|precisamos|procuro|procuramos|busco|buscamos|necessito|solicito|quero contratar|gostaria de contratar|algu[eé]m indica|algu[eé]m faz|quem faz|quem pode fazer|pedido de or[cç]amento|preciso de or[cç]amento)\b/;
+const leadTransport=/\b(?:mudanc[ae]s?|mobiliario|moveis|transportar|transporte|frete|carreto|caminhao|bens)\b/;
+const leadReject=/\b(?:como fazer|dicas|noticia|noticias|guia|blog|curso|emprego|vagas|passo a passo|lei|politica|governanca|climatica|onibus|marketing|empresa de mudancas|transportadora oferece|oferecemos|nossos servicos|precos e planos|assine agora|contrate nossa|servicos de mudancas|indenizacao|avaria|sofa rasgado|quebrou|danificou|reclama|recusa a pagar|indenizar|licitacao|pregao|edital|venda de caminhao|site oficial)\b/;
 function contactFromPosting(r){
  const txt=String(r.description||"")+" "+String(r.title||"");
- // Somente dados explicitamente oferecidos para contato comercial no anuncio.
+ // Não capta telefones de perfis privados: só números publicados junto do pedido.
  const email=txt.match(/(?:contato|email|e-mail|or[cç]amento)[^\n]{0,35}?([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i)?.[1]||"";
  const phone=txt.match(/(?:whats(?:app)?|telefone|tel\.?|contato)[^0-9]{0,16}((?:\+?55\s*)?\(?\d{2}\)?[\s.-]*9?\d{4}[\s.-]*\d{4})/i)?.[1]||"";
- return {email:esc(email),phone:esc(phone),contactNote:email||phone?"Contato divulgado no pedido público; confirme se foi disponibilizado para propostas.":"Contato não divulgado no resultado. Consulte a fonte para responder pelo canal autorizado."};
+ return {email:esc(email),phone:esc(phone),contactNote:email||phone?"Contato anunciado publicamente junto à solicitação; confirme permissão e atualidade antes de responder.":"Contato não divulgado."};
 }
-function isPublicRequest(item){const t=normalize(item.title+" "+(item.description||""));return leadRequest.test(t)&&leadTransport.test(t)&&!leadReject.test(t);}
+function isPublicRequest(item){
+ const title=normalize(item.title||""),description=normalize(item.description||"");
+ const text=title+" "+description;
+ // Não aproveitar um trecho incidental da notícia ou anúncio da transportadora.
+ return leadRequest.test(title)&&leadTransport.test(text)&&!leadReject.test(text);
+}
+function isContactableLead(item){
+ if(!validLink(item.link)||!isPublicRequest(item))return false;
+ if(!contactFromPosting(item).phone&&!contactFromPosting(item).email)return false;
+ const published=Date.parse(item.publishedAt||"");
+ // Não inventar data quando o agregador não a informa.
+ return Number.isFinite(published)&&published>=Date.now()-45*86400000&&published<=Date.now()+86400000;
+}
 async function scanPublicRequests(){
  const results=await Promise.allSettled(leadQueries.map(async q=>{
   const u="https://www.bing.com/search?format=rss&q="+encodeURIComponent(q);
   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
   try{const response=await fetch(u,{signal:ctrl.signal,headers:{"User-Agent":"Mozilla/5.0 (compatible; MudancasBrasilPublicRequests/1.0)"}});if(!response.ok)throw Error("HTTP "+response.status);
    const xml=await response.text();if(!xml.includes("<rss")&&!xml.includes("<item"))throw Error("Fonte RSS indisponível");
-   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,20).map(m=>({title:esc(tag(m[1],"title")),description:esc(tag(m[1],"description")),link:esc(tag(m[1],"link")),publishedAt:tag(m[1],"pubDate"),searchTerm:q})).filter(x=>validLink(x.link)&&isPublicRequest(x));
+   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,20).map(m=>({title:esc(tag(m[1],"title")),description:esc(tag(m[1],"description")),link:esc(tag(m[1],"link")),publishedAt:tag(m[1],"pubDate"),searchTerm:q})).filter(isContactableLead);
   }finally{clearTimeout(timer)}
  }));
- const x=await load();x.requests=x.requests.filter(isPublicRequest);const known=new Set(x.requests.map(v=>v.link));let added=0;
+ const x=await load();x.requests=x.requests.filter(isContactableLead);const known=new Set(x.requests.map(v=>v.link));let added=0;
  for(const r of results.filter(v=>v.status==="fulfilled").flatMap(v=>v.value)){
   if(known.has(r.link))continue;known.add(r.link);x.requests.unshift({...r,id:randomBytes(10).toString("hex"),source:"pedido_publico",status:"novo",discoveredAt:new Date().toISOString(),name:"Não informado",...contactFromPosting(r),origin:"",destination:"",originUF:"",destinationUF:""});added++;
  }
@@ -101,7 +114,7 @@ async function scanGoogleAlerts(){
     const link=decode(attrLink||tag(entry,"link"));
     const publishedAt=tag(entry,"published")||tag(entry,"updated")||tag(entry,"pubDate");
     return {title:esc(title),description:esc(description),link:esc(link),publishedAt,searchTerm:"Google Alerts"};
-   }).filter(x=>validLink(x.link)&&isPublicRequest(x)&&!!(contactFromPosting(x).phone||contactFromPosting(x).email));
+   }).filter(isContactableLead);
   }finally{clearTimeout(timer)}
  }));
  const x=await load();const known=new Set(x.requests.map(v=>v.link));let added=0;
@@ -231,7 +244,7 @@ export async function saveInquiry(fields,protocol){const x=await load();if(x.inq
  x.inquiries.unshift({id:randomBytes(10).toString("hex"),protocol,receivedAt:new Date().toISOString(),name:esc(fields.nome),email:esc(fields.email),phone:esc(fields.telefone),origin:esc(fields.origem),destination:esc(fields.destino),originUF:extractUF(fields.origem),destinationUF:extractUF(fields.destino),date:esc(fields.data),boxes:esc(fields.quantidadeCaixas),status:"novo",source:"formulario_site",notes:"Solicitou orçamento e autorizou uso dos dados para resposta."});
  x.inquiries=x.inquiries.slice(0,3000);await save(x)
 }
-export async function getCapture(){const x=await load();return {inquiries:x.inquiries,requests:x.requests.filter(isPublicRequest),mudar:x.mudar,opportunities:[],status:{mudarLastRun,mudarLastError,googleAlertsConfigured:googleAlertsFeeds.length>0,googleAlertsLastRun,googleAlertsLastError,active,lastRun,lastError,nextRun,frequencyHours:6,source:"Pedidos públicos declarados por interessados (sem buscas privadas)",paid:false}}}
+export async function getCapture(){const x=await load();return {inquiries:x.inquiries,requests:x.requests.filter(isContactableLead),mudar:x.mudar,opportunities:[],status:{mudarLastRun,mudarLastError,googleAlertsConfigured:googleAlertsFeeds.length>0,googleAlertsLastRun,googleAlertsLastError,active,lastRun,lastError,nextRun,frequencyHours:6,source:"Pedidos públicos declarados por interessados (sem buscas privadas)",paid:false}}}
 export async function setCaptureStatus(id,status){if(!["novo","em_analise","contatado","descartado"].includes(status))throw Error("Status inválido");const x=await load();const item=[...x.inquiries,...x.opportunities,...x.requests,...x.mudar].find(v=>v.id===id);if(!item)throw Error("Registro não encontrado");item.status=status;await save(x);return item}
 async function fetchFeed(term){const url="https://news.google.com/rss/search?q="+encodeURIComponent(term)+"&hl=pt-BR&gl=BR&ceid=BR:pt-419";
  const c=new AbortController();const timeout=setTimeout(()=>c.abort(),15000);
