@@ -109,6 +109,7 @@ async function renderMudarWithBrowser(){
  // Fallback para uma página pública que monta os cartões via JavaScript.
  // Não usa login, cookies de terceiros ou endpoints não documentados.
  let chromium;
+ if(!process.env.MUDAR_CHROMIUM_PATH)process.env.PLAYWRIGHT_BROWSERS_PATH="0";
  try{({chromium}=await import("playwright-core"))}
  catch{throw Error("Leitor com navegador indisponível: dependência playwright-core não instalada.")}
  const options={headless:true,timeout:15000,args:["--disable-dev-shm-usage","--no-sandbox"]};
