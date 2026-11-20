@@ -109,7 +109,7 @@ function parseMudarPublic(html){
    const city1=m[1].split(/[\r\n]/).at(-1).trim().replace(/^.*(?:Compartilhar|Compartilhada|Ajudante|Embalagem|Montagem)\s+/i,"").trim();
    const city2=m[3].trim();if(!city1||!city2||city1.length>65||city2.length>65)continue;
    const origin=city1+"/"+m[2],destination=city2+"/"+m[4],day=date?.[0]||"",volume=vol?.[1].replace(",",".")||"";
-   const key=normalize([origin,destination,day,volume].join("|"));if(seen.has(key))continue;seen.add(key);
+   const key=normalize([origin,destination,volume].join("|"));if(seen.has(key)){const old=out.find(v=>normalize([v.origin,v.destination,v.volume].join("|"))===key);if(old&&!old.date&&day)old.date=day;continue}seen.add(key);
    out.push({origin,destination,originUF:m[2],destinationUF:m[4],date:day,volume,services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(after)),link:MUDAR_URL});
   }
  }
