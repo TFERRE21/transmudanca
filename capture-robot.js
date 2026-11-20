@@ -81,20 +81,25 @@ async function scanPublicRequests(){
 const MUDAR_URL="https://mudarbr.com.br/movinglist";
 let mudarLastRun=null,mudarLastError="";
 function parseMudarPublic(html){
- const text=decode(String(html).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ")).replace(/\s+/g," ");
- const route=/([\p{L}][\p{L} .'-]{1,55})\s*\/\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\s+([\p{L}][\p{L} .'-]{1,55})\s*\/\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)/gu;
- const items=[];let m;
- while((m=route.exec(text))!==null&&items.length<300){
-  const after=text.slice(route.lastIndex,route.lastIndex+140);
-  const vol=after.match(/(\d+(?:[.,]\d{1,2})?)\s*m³/i);
-  const date=after.match(/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i);
-  if(!vol&&!date)continue;
-  if(vol&&Number(vol[1].replace(",","."))>1000)continue;
-  const origin=m[1].trim()+"/"+m[2],destination=m[3].trim()+"/"+m[4];
-  const services=["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(after.slice(0,110)));
-  items.push({origin,destination,originUF:m[2],destinationUF:m[4],date:date?.[0]||"",volume:vol?.[1]||"",services,link:MUDAR_URL});
+ const raw=String(html).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<\/(?:div|p|li|article|section|h[1-6]|button)>/gi,"\n").replace(/<br\s*\/?>/gi,"\n").replace(/<[^>]+>/g," ");
+ const text=decode(raw).replace(/&nbsp;|&#160;/gi," ").replace(/[ \t]+/g," ").replace(/\n\s*\n/g,"\n");
+ const states="AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO";
+ const route=new RegExp("([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+states+")\\s+([\\p{L}][\\p{L} .'-]{1,65})\\s*\\/\\s*("+states+")","gu");
+ const datePattern=/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i;
+ const volumePattern=/(\d{1,3}(?:[.,]\d{1,2})?)\s*m(?:³|3)/i;
+ const matches=[...text.matchAll(route)],out=[];
+ for(let i=0;i<matches.length&&out.length<300;i++){
+  const m=matches[i],end=matches[i+1]?.index??text.length;
+  const detail=text.slice(m.index+m[0].length,Math.min(end,m.index+m[0].length+320));
+  const date=detail.match(datePattern),vol=detail.match(volumePattern);
+  if(!date&&!vol)continue;
+  if(vol&&Number(vol[1].replace(",","."))>100)continue;
+  let first=m[1].split(/\n/).at(-1).trim();
+  first=first.replace(/^.*(?:Compartilhar|Compartilhada|Ajudante|Embalagem|Montagem)\s+/i,"").trim();
+  if(!first||first.length>65)continue;
+  out.push({origin:first+"/"+m[2],destination:m[3].trim()+"/"+m[4],originUF:m[2],destinationUF:m[4],date:date?.[0]||"",volume:vol?.[1].replace(",",".")||"",services:["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(detail)),link:MUDAR_URL});
  }
- return items;
+ return out;
 }
 async function scanMudar(){
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),16000);
@@ -113,7 +118,7 @@ async function scanMudar(){
   const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
   if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
   const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
-  const incoming=parseMudarPublic(html);if(!incoming.length)throw Error("Nenhum cartão reconhecido no HTML público");
+  const incoming=parseMudarPublic(html);if(!incoming.length)throw Error("Não foram encontrados pedidos no HTML recebido. A lista pode ser carregada por JavaScript no navegador ou o formato mudou; requer integração pública autorizada.");
   const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
   x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
     const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
