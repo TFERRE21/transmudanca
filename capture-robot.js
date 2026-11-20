@@ -77,7 +77,53 @@ async function scanPublicRequests(){
  return {added,checked:results.length,unavailable:results.filter(v=>v.status==="rejected").length};
 }
 
-async function load(){try{const x=JSON.parse(await readFile(storage,"utf8"));return {opportunities:Array.isArray(x.opportunities)?x.opportunities:[],inquiries:Array.isArray(x.inquiries)?x.inquiries:[],requests:Array.isArray(x.requests)?x.requests:[]}}catch(e){if(e.code==="ENOENT")return {opportunities:[],inquiries:[],requests:[]};throw e}}
+
+const MUDAR_URL="https://mudarbr.com.br/movinglist";
+let mudarLastRun=null,mudarLastError="";
+function parseMudarPublic(html){
+ const text=decode(String(html).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi," ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ")).replace(/\s+/g," ");
+ const route=/([\p{L}][\p{L} .'-]{1,55})\s*\/\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\s+([\p{L}][\p{L} .'-]{1,55})\s*\/\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)/gu;
+ const items=[];let m;
+ while((m=route.exec(text))!==null&&items.length<300){
+  const after=text.slice(route.lastIndex,route.lastIndex+140);
+  const vol=after.match(/(\d+(?:[.,]\d{1,2})?)\s*m³/i);
+  const date=after.match(/\b\d{1,2}\s+de\s+(?:janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i);
+  if(!vol&&!date)continue;
+  if(vol&&Number(vol[1].replace(",","."))>1000)continue;
+  const origin=m[1].trim()+"/"+m[2],destination=m[3].trim()+"/"+m[4];
+  const services=["Compartilhada","Montagem","Embalagem","Ajudante"].filter(v=>new RegExp(v,"i").test(after.slice(0,110)));
+  items.push({origin,destination,originUF:m[2],destinationUF:m[4],date:date?.[0]||"",volume:vol?.[1]||"",services,link:MUDAR_URL});
+ }
+ return items;
+}
+async function scanMudar(){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),16000);
+ try{
+  const robots=await fetch("https://mudarbr.com.br/robots.txt",{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0"}});
+  if(robots.status!==404){
+   if(!robots.ok)throw Error("Não foi possível verificar as regras de acesso da plataforma");
+   let allow=true,global=false;
+   for(const raw of (await robots.text()).split(/\r?\n/)){
+    const line=raw.split("#")[0].trim(),ua=line.match(/^User-agent:\s*(.+)/i);
+    if(ua){global=ua[1].trim()==="*";continue}
+    if(global){const d=line.match(/^Disallow:\s*(\S+)/i);if(d&&(d[1]==="/"||"/movinglist".startsWith(d[1])))allow=false}
+   }
+   if(!allow)throw Error("O site restringe consulta automatizada da lista");
+  }
+  const response=await fetch(MUDAR_URL,{signal:ctrl.signal,headers:{"User-Agent":"MudancasBrasilPublicMonitor/1.0","Accept":"text/html"}});
+  if(!response.ok)throw Error("Fonte indisponível HTTP "+response.status);
+  const html=await response.text();if(html.length>3000000)throw Error("Resposta acima do limite");
+  const incoming=parseMudarPublic(html);if(!incoming.length)throw Error("Nenhum cartão reconhecido no HTML público");
+  const x=await load(),previous=new Map(x.mudar.map(v=>[v.key,v]));let added=0;const dedupe=new Set();
+  x.mudar=incoming.filter(v=>{const key=normalize([v.origin,v.destination,v.date,v.volume].join("|"));if(dedupe.has(key))return false;dedupe.add(key);return true}).map(v=>{
+    const key=normalize([v.origin,v.destination,v.date,v.volume].join("|")),old=previous.get(key);if(!old)added++;
+    return {...v,key,id:old?.id||randomBytes(10).toString("hex"),status:old?.status||"novo",source:"mudar_publico",firstSeen:old?.firstSeen||new Date().toISOString()}
+  });
+  await save(x);mudarLastRun=new Date().toISOString();mudarLastError="";return {added,total:x.mudar.length};
+ }catch(e){mudarLastError=String(e.message||e).slice(0,250);return {added:0,error:mudarLastError}}finally{clearTimeout(timer)}
+}
+
+async function load(){try{const x=JSON.parse(await readFile(storage,"utf8"));return {opportunities:Array.isArray(x.opportunities)?x.opportunities:[],inquiries:Array.isArray(x.inquiries)?x.inquiries:[],requests:Array.isArray(x.requests)?x.requests:[],mudar:Array.isArray(x.mudar)?x.mudar:[]}}catch(e){if(e.code==="ENOENT")return {opportunities:[],inquiries:[],requests:[],mudar:[]};throw e}}
 async function save(x){await mkdir(dir,{recursive:true,mode:0o700});const temp=storage+"."+randomBytes(6).toString("hex");await writeFile(temp,JSON.stringify(x,null,2),{mode:0o600});await rename(temp,storage)}
 const extractUF=value=>{const match=String(value||"").toUpperCase().match(/(?:^|[^A-Z])(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)(?=$|[^A-Z])/);return match?match[1]:""};
 const validLink=url=>{try{const u=new URL(url);return u.protocol==="https:"||u.protocol==="http:"}catch{return false}};
@@ -85,12 +131,12 @@ export async function saveInquiry(fields,protocol){const x=await load();if(x.inq
  x.inquiries.unshift({id:randomBytes(10).toString("hex"),protocol,receivedAt:new Date().toISOString(),name:esc(fields.nome),email:esc(fields.email),phone:esc(fields.telefone),origin:esc(fields.origem),destination:esc(fields.destino),originUF:extractUF(fields.origem),destinationUF:extractUF(fields.destino),date:esc(fields.data),boxes:esc(fields.quantidadeCaixas),status:"novo",source:"formulario_site",notes:"Solicitou orçamento e autorizou uso dos dados para resposta."});
  x.inquiries=x.inquiries.slice(0,3000);await save(x)
 }
-export async function getCapture(){const x=await load();return {inquiries:x.inquiries,requests:x.requests.filter(isPublicRequest),opportunities:[],status:{active,lastRun,lastError,nextRun,frequencyHours:6,source:"Pedidos públicos declarados por interessados (sem buscas privadas)",paid:false}}}
-export async function setCaptureStatus(id,status){if(!["novo","em_analise","contatado","descartado"].includes(status))throw Error("Status inválido");const x=await load();const item=[...x.inquiries,...x.opportunities,...x.requests].find(v=>v.id===id);if(!item)throw Error("Registro não encontrado");item.status=status;await save(x);return item}
+export async function getCapture(){const x=await load();return {inquiries:x.inquiries,requests:x.requests.filter(isPublicRequest),mudar:x.mudar,opportunities:[],status:{mudarLastRun,mudarLastError,active,lastRun,lastError,nextRun,frequencyHours:6,source:"Pedidos públicos declarados por interessados (sem buscas privadas)",paid:false}}}
+export async function setCaptureStatus(id,status){if(!["novo","em_analise","contatado","descartado"].includes(status))throw Error("Status inválido");const x=await load();const item=[...x.inquiries,...x.opportunities,...x.requests,...x.mudar].find(v=>v.id===id);if(!item)throw Error("Registro não encontrado");item.status=status;await save(x);return item}
 async function fetchFeed(term){const url="https://news.google.com/rss/search?q="+encodeURIComponent(term)+"&hl=pt-BR&gl=BR&ceid=BR:pt-419";
  const c=new AbortController();const timeout=setTimeout(()=>c.abort(),15000);
  try{const r=await fetch(url,{signal:c.signal,headers:{"User-Agent":"MudancasBrasilOpportunityMonitor/1.0"}});if(!r.ok)throw Error("RSS HTTP "+r.status);const xml=await r.text();return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,25).map(m=>{const title=tag(m[1],"title"),link=tag(m[1],"link"),date=tag(m[1],"pubDate");return {title:esc(title),link:esc(link),publishedAt:date&&Number.isFinite(Date.parse(date))?new Date(date).toISOString():"",term,origin:"",destination:"",originUF:"",destinationUF:""}}).filter(x=>x.title&&validLink(x.link))}
  finally{clearTimeout(timeout)}
 }
-export async function scanPublic(){if(active)return {running:true};active=true;lastError="";try{const result=await scanPublicRequests();lastRun=new Date().toISOString();if(result.unavailable===leadQueries.length)lastError="As fontes públicas de busca estão indisponíveis ou limitaram consultas.";return {ok:true,publicRequests:result,added:result.added,found:result.checked,partialErrors:result.unavailable}}catch(e){lastError=String(e.message||e).slice(0,400);throw e}finally{active=false;nextRun=new Date(Date.now()+interval).toISOString()}}
+export async function scanPublic(){if(active)return {running:true};active=true;lastError="";try{const result=await scanPublicRequests();const mudar=await scanMudar();lastRun=new Date().toISOString();if(result.unavailable===leadQueries.length)lastError="As fontes públicas de busca estão indisponíveis ou limitaram consultas.";return {ok:true,publicRequests:result,mudar,added:result.added+mudar.added,found:result.checked,partialErrors:result.unavailable}}catch(e){lastError=String(e.message||e).slice(0,400);throw e}finally{active=false;nextRun=new Date(Date.now()+interval).toISOString()}}
 export function startCaptureRobot(){nextRun=new Date(Date.now()+20000).toISOString();setTimeout(()=>{scanPublic().catch(e=>console.error("Monitor oportunidades:",e.message));},20000).unref?.();setInterval(()=>scanPublic().catch(e=>console.error("Monitor oportunidades:",e.message)),interval).unref?.()}
